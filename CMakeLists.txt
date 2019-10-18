@@ -4,6 +4,8 @@ project(pgreshape C)
 add_executable(pgreshape
 	src/pgreshape.c
 	src/pgreshape.h
+	src/config.c
+	src/config.h
 )
 
 # ignore Windows warnings
