@@ -64,7 +64,7 @@ void getTableAttributes(PGconn *c, PGTable *t) {
 		char *withoutescape;
 
 		t->attributes[i].attnum = atoi(PQgetvalue(res, i, PQfnumber(res, "attnum")));
-		t->attributes[i].attname = PQgetvalue(res, i, PQfnumber(res, "attname"));
+		t->attributes[i].attname = strdup(PQgetvalue(res, i, PQfnumber(res, "attname")));
 		t->attributes[i].attnotnull = (PQgetvalue(res, i, PQfnumber(res, "attnotnull"))[0] == 't');
 		t->attributes[i].atttypname = strdup(PQgetvalue(res, i, PQfnumber(res, "atttypname")));
 
@@ -140,7 +140,7 @@ void getTableIndexes(PGconn *c, PGTable *t) {
 	int i;
 
 	asprintf(&query, 
-		"SELECT contype, c2.relname, pg_catalog.pg_get_indexdef(i.indexrelid, 0, true) FROM pg_catalog.pg_class c inner join pg_catalog.pg_index i ON (c.oid = i.indrelid) inner join pg_catalog.pg_class c2 ON (i.indexrelid = c2.oid AND i.indisprimary <> true) inner join pg_catalog.pg_namespace sp ON (sp.oid = c2.relnamespace) LEFT JOIN pg_catalog.pg_constraint con ON (conrelid = i.indrelid AND conindid = i.indexrelid AND contype IN ('x')) WHERE c.oid = %u ORDER BY i.indisprimary DESC, i.indisunique DESC, c2.relname;", t->oid);
+		"SELECT contype, c2.relname, pg_catalog.pg_get_indexdef(i.indexrelid, 0, true) as indexdef FROM pg_catalog.pg_class c inner join pg_catalog.pg_index i ON (c.oid = i.indrelid) inner join pg_catalog.pg_class c2 ON (i.indexrelid = c2.oid AND i.indisprimary <> true) inner join pg_catalog.pg_namespace sp ON (sp.oid = c2.relnamespace) LEFT JOIN pg_catalog.pg_constraint con ON (conrelid = i.indrelid AND conindid = i.indexrelid AND contype IN ('x')) WHERE contype NOTNULL AND c.oid = %u ORDER BY i.indisprimary DESC, i.indisunique DESC, c2.relname;", t->oid);
 
 	res = PQexec(c, query);
 	
@@ -161,8 +161,8 @@ void getTableIndexes(PGconn *c, PGTable *t) {
 	for (i = 0; i < t->nindexes; i++)
 	{
 		t->indexes[i].contype = PQgetvalue(res, i, PQfnumber(res, "contype"))[0];
-		t->indexes[i].relname = PQgetvalue(res, i, PQfnumber(res, "relname"));
-		t->indexes[i].pg_get_indexdef = PQgetvalue(res, i, PQfnumber(res, "pg_get_indexdef"));
+		t->indexes[i].relname = strdup(PQgetvalue(res, i, PQfnumber(res, "relname")));
+		t->indexes[i].indexdef = strdup(PQgetvalue(res, i, PQfnumber(res, "indexdef")));
 	}
 
 	PQclear(res);
@@ -175,7 +175,7 @@ void getTableUnique(PGconn *c, PGTable *t) {
 	int i;
 
 	asprintf(&query, 
-		"SELECT contype, c2.relname, pg_catalog.pg_get_indexdef(i.indexrelid, 0, true) FROM pg_catalog.pg_class c inner join pg_catalog.pg_index i ON (c.oid = i.indrelid) inner join pg_catalog.pg_class c2 ON (i.indexrelid = c2.oid AND i.indisprimary <> true) inner join pg_catalog.pg_namespace sp ON (sp.oid = c2.relnamespace) LEFT JOIN pg_catalog.pg_constraint con ON (conrelid = i.indrelid AND conindid = i.indexrelid AND contype IN ('u')) WHERE c.oid = %u ORDER BY i.indisprimary DESC, i.indisunique DESC, c2.relname;", t->oid);
+		"SELECT contype, c2.relname, pg_catalog.pg_get_indexdef(i.indexrelid, 0, true) as indexdef FROM pg_catalog.pg_class c inner join pg_catalog.pg_index i ON (c.oid = i.indrelid) inner join pg_catalog.pg_class c2 ON (i.indexrelid = c2.oid AND i.indisprimary <> true) inner join pg_catalog.pg_namespace sp ON (sp.oid = c2.relnamespace) LEFT JOIN pg_catalog.pg_constraint con ON (conrelid = i.indrelid AND conindid = i.indexrelid AND contype IN ('u')) WHERE contype NOTNULL AND c.oid = %u ORDER BY i.indisprimary DESC, i.indisunique DESC, c2.relname;", t->oid);
 
 	res = PQexec(c, query);
 	
@@ -196,8 +196,8 @@ void getTableUnique(PGconn *c, PGTable *t) {
 	for (i = 0; i < t->nunique; i++)
 	{
 		t->unique[i].contype = PQgetvalue(res, i, PQfnumber(res, "contype"))[0];
-		t->unique[i].relname = PQgetvalue(res, i, PQfnumber(res, "relname"));
-		t->unique[i].pg_get_indexdef = PQgetvalue(res, i, PQfnumber(res, "pg_get_indexdef"));
+		t->unique[i].relname = strdup(PQgetvalue(res, i, PQfnumber(res, "relname")));
+		t->unique[i].indexdef = strdup(PQgetvalue(res, i, PQfnumber(res, "indexdef")));
 	}
 
 	PQclear(res);
@@ -231,9 +231,66 @@ void getTableForeignKey(PGconn *c, PGTable *t) {
 
 	for (i = 0; i < t->nforeignkey; i++)
 	{
-		t->foreignkeys[i].conname = PQgetvalue(res, i, PQfnumber(res, "conname"));
-		t->foreignkeys[i].condef = PQgetvalue(res, i, PQfnumber(res, "condef"));
+		t->foreignkeys[i].conname = strdup(PQgetvalue(res, i, PQfnumber(res, "conname")));
+		t->foreignkeys[i].condef = strdup(PQgetvalue(res, i, PQfnumber(res, "condef")));
 	}
 
 	PQclear(res);
+}
+
+
+void dumpDropIndex(FILE *fout, PGTable *t) {
+	int i;
+	for (i = 0; i < t->nindexes; i++)
+	{
+		fprintf(fout, "ALTER TABLE %s.%s DROP CONSTRAINT %s;\n", t->schema, t->table, t->indexes[i].relname);
+	}
+}
+
+
+void dumpDropUnique(FILE *fout, PGTable *t) {
+	int i;
+	for (i = 0; i < t->nunique; i++)
+	{
+		fprintf(fout, "ALTER TABLE %s.%s DROP CONSTRAINT %s;\n", t->schema, t->table, t->unique[i].relname);
+	}
+}
+
+
+void dumpDropForeignKey(FILE *fout, PGTable *t) {
+	int i;
+	for (i = 0; i < t->nforeignkey; i++)
+	{
+		fprintf(fout, "ALTER TABLE %s.%s DROP CONSTRAINT %s;\n", t->schema, t->table, t->foreignkeys[i].conname);
+	}
+}
+
+
+void dumpCreateTempTableBackup(FILE *fout, PGTable *t) {
+	fprintf(fout, "CREATE TABLE %s.%s_reshape_bk AS SELECT * FROM %s.%s ORDER BY id DESC;\n", t->schema, t->table, t->schema, t->table);
+}
+
+
+void dumpDropTableColumn(FILE *fout, PGTable *t, PGROption *opts) {
+	/*search offset column*/
+	int index_column;
+	int offset_column;
+	for (int index_column = 0; index_column < t->nattributes; ++index_column)
+	{
+		if (strcmp(t->attributes[index_column].attname, opts->offset) == 0)
+		{
+			offset_column = t->attributes[index_column].attnum;
+			break;
+		}
+	}
+
+
+	int i;
+	for (int i = 0; i < t->nattributes; ++i)
+	{
+		if (t->attributes[i].attnum > offset_column)
+		{
+			fprintf(fout, "ALTER TABLE %s.%s DROP COLUMN %s;\n", t->schema, t->table, t->attributes[i].attname);
+		}
+	}
 }

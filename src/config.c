@@ -76,6 +76,8 @@ ConfigFile *loadConfig(const char *path)
 				conf->user = strdup(val);
 			if(strcmp(key, "password") == 0)
 				conf->password = strdup(val);
+			if(strcmp(key, "file") == 0)
+				conf->file = strdup(val);
 
 		}
 

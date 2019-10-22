@@ -32,10 +32,13 @@
 #include <stdio.h>
 #include <string.h>
 
+FILE *output;
+PGTable *t;
+
 static void help(void);
 PGconn* pg_connect(const char * host, const char *user, const char *pass, const char *dbname, const char *port);
 static void pg_close(PGconn *conn);
-static void reshapeTable(PGconn *c, PGROption *opts);
+static void getTableObjects(PGconn *c, PGROption *opts);
 
 
 /*
@@ -70,13 +73,46 @@ static void help(void)
 }
 
 
+static void generatePreScript(FILE *fout, PGROption *opts) {
+	fprintf(fout, "--\n-- pgreshape %s\n", PGR_VERSION);
+	fprintf(fout, "-- by Rafael Garcia Sagastume Inc.\n");
+	fprintf(fout, "-- Copyright %s.\n", PGR_COPY);
+	fprintf(fout, "--");
+
+	fprintf(fout, "\n\nBEGIN;\n");
+
+	/*dump drop unique*/
+	dumpDropUnique(fout, t);
+
+	/*dump drop index*/
+	dumpDropIndex(fout, t);
+
+	/*dump drop foreign keys*/
+	dumpDropForeignKey(fout, t);
+
+	/*create table temp for backup data*/
+	fprintf(fout, "\n");
+	dumpCreateTempTableBackup(fout, t);
+
+	
+	if (opts->offset == NULL || strcmp(opts->offset, "") == 0)
+	{
+		fprintf(fout, "Error -> offset not specified\n");
+		exit(EXIT_SUCCESS);
+	}
+
+	/*dump drop columns on table*/
+	dumpDropTableColumn(fout, t, opts);
+}
+
+
 /*
  * process to find the dependencies of the table, views, functions, 
  * foreign keys for recessing the new column
  */
 static void getTableObjects(PGconn *c, PGROption *opts) {
 
-	PGTable *t = getTable(c, opts);
+	t = getTable(c, opts);
 
 	if (t == NULL)
 	{
@@ -100,9 +136,7 @@ static void getTableObjects(PGconn *c, PGROption *opts) {
 	/*Search all views referenced to the table*/
 	getDependentViews(c, t);
 
-
-	printf("OID:[%d] Tabla:[%s] -> [%s]\n", t->oid, t->table, t->attributes[0].comment);
-
+	printf("OID:[%d] Tabla:[%s] -> NUnique [%d]\n", t->oid, t->table, t->nunique);
 }
 
 
@@ -176,7 +210,24 @@ int main(int argc, char const *argv[])
 		*/
 		conn = pg_connect(config->host, config->user, config->password, config->dbname, config->port);
 
-		getTableObjects(conn, opts);
+		if (config->file != NULL)
+		{
+			output = fopen(config->file, "w");
+			if (!output)
+			{
+				printf("could not open file \"%s\": %s \n", config->file, strerror(errno));
+				exit(EXIT_FAILURE);
+			}
+
+
+			/*extract the necessary objects for the first phase of the procedure*/
+			getTableObjects(conn, opts);
+
+			generatePreScript(output, opts);
+
+		} else {
+			printf("output file not specified.\n");	
+		}
 
 		pg_close(conn);
 	} else {

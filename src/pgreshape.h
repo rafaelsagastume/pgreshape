@@ -15,6 +15,7 @@
 #define PGR_VERSION			"0.0.1"
 #define PGR_SUPPORTED		110000	/* first supported version */
 #define PGR_SUPPORTED_STR	"11.0.0"
+#define PGR_COPY			"2019"
 
 
 #endif

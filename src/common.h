@@ -26,14 +26,14 @@ typedef struct PGUnique
 {
 	char contype;
 	char *relname;
-	char *pg_get_indexdef;
+	char *indexdef;
 } PGUnique;
 
 typedef struct PGIndex
 {
 	char contype;
 	char *relname;
-	char *pg_get_indexdef;
+	char *indexdef;
 } PGIndex;
 
 typedef struct PGAttribute

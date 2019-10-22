@@ -18,6 +18,7 @@ typedef struct {
     char *user;
     char *password;
     char *dbname;
+    char *file;
     
 } ConfigFile;
 

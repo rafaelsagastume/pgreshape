@@ -30,7 +30,7 @@ void getDependentViews(PGconn *c, PGTable *t)
 		t->views[i].oid = atoi(PQgetvalue(res, i, PQfnumber(res, "oid")));
 		t->views[i].schema = PQgetvalue(res, i, PQfnumber(res, "schema"));
 		t->views[i].view = PQgetvalue(res, i, PQfnumber(res, "view"));
-		t->views[i].relkind = PQgetvalue(res, i, PQfnumber(res, "relkind"));
+		t->views[i].relkind = PQgetvalue(res, i, PQfnumber(res, "relkind"))[0];
 		t->views[i].view_definition = PQgetvalue(res, i, PQfnumber(res, "view_definition"));
 		t->views[i].relowner = PQgetvalue(res, i, PQfnumber(res, "relowner"));
 		t->views[i].comment = PQgetvalue(res, i, PQfnumber(res, "comment"));
