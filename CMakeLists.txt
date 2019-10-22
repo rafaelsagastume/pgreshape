@@ -8,6 +8,10 @@ add_executable(pgreshape
 	src/config.h
 	src/table.c
 	src/table.h
+	src/common.c
+	src/common.h
+	src/view.c
+	src/view.h
 )
 
 # ignore Windows warnings
