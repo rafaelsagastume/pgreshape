@@ -62,6 +62,8 @@ typedef struct PGView
 	char *relowner;
 	char *comment;
 	char *acl;
+	char *reloptions;
+	char *checkoption;
 } PGView;
 
 typedef struct PGTable
@@ -90,5 +92,7 @@ typedef struct PGROption {
 	char *type;
 
 } PGROption;
+
+char * formatObjectIdentifier(char *s);
 
 #endif

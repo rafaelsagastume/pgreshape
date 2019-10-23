@@ -129,6 +129,9 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 
 	/*dump to generate unique constraint*/
 	dumpCreateUnique(fout, t);
+
+	/*dump to generate dependent views*/
+	dumpCreateCreateView(fout, t);
 }
 
 
