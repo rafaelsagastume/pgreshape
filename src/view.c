@@ -28,12 +28,21 @@ void getDependentViews(PGconn *c, PGTable *t)
 	for (i = 0; i < t->nviews; i++)
 	{
 		t->views[i].oid = atoi(PQgetvalue(res, i, PQfnumber(res, "oid")));
-		t->views[i].schema = PQgetvalue(res, i, PQfnumber(res, "schema"));
-		t->views[i].view = PQgetvalue(res, i, PQfnumber(res, "view"));
+		t->views[i].schema = strdup(PQgetvalue(res, i, PQfnumber(res, "schema")));
+		t->views[i].view = strdup(PQgetvalue(res, i, PQfnumber(res, "view")));
 		t->views[i].relkind = PQgetvalue(res, i, PQfnumber(res, "relkind"))[0];
-		t->views[i].view_definition = PQgetvalue(res, i, PQfnumber(res, "view_definition"));
-		t->views[i].relowner = PQgetvalue(res, i, PQfnumber(res, "relowner"));
-		t->views[i].comment = PQgetvalue(res, i, PQfnumber(res, "comment"));
-		t->views[i].acl = PQgetvalue(res, i, PQfnumber(res, "acl"));
+		t->views[i].view_definition = strdup(PQgetvalue(res, i, PQfnumber(res, "view_definition")));
+		t->views[i].relowner = strdup(PQgetvalue(res, i, PQfnumber(res, "relowner")));
+		t->views[i].comment = strdup(PQgetvalue(res, i, PQfnumber(res, "comment")));
+		t->views[i].acl = strdup(PQgetvalue(res, i, PQfnumber(res, "acl")));
+	}
+}
+
+
+void dumpDropDependentView(FILE *fout, PGTable *t) {
+	int i;
+	for (i = 0; i < t->nviews; i++)
+	{
+		fprintf(fout, "DROP VIEW IF EXISTS %s.%s;\n", t->views[i].schema, t->views[i].view);
 	}
 }

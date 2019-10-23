@@ -13,5 +13,8 @@ void dumpDropUnique(FILE *fout, PGTable *t);
 void dumpDropForeignKey(FILE *fout, PGTable *t);
 void dumpCreateTempTableBackup(FILE *fout, PGTable *t);
 void dumpDropTableColumn(FILE *fout, PGTable *t, PGROption *opts);
+int getAttnumOffset(PGTable *t, PGROption *opts);
+void dumpNewColumn(FILE *fout, PGTable *t, PGROption *opts);
+void dumpColumnTable(FILE *fout, PGTable *t, PGROption *opts);
 
 #endif

@@ -273,24 +273,69 @@ void dumpCreateTempTableBackup(FILE *fout, PGTable *t) {
 
 void dumpDropTableColumn(FILE *fout, PGTable *t, PGROption *opts) {
 	/*search offset column*/
-	int index_column;
-	int offset_column;
-	for (int index_column = 0; index_column < t->nattributes; ++index_column)
-	{
-		if (strcmp(t->attributes[index_column].attname, opts->offset) == 0)
-		{
-			offset_column = t->attributes[index_column].attnum;
-			break;
-		}
-	}
-
+	int offset_column = getAttnumOffset(t, opts);
 
 	int i;
-	for (int i = 0; i < t->nattributes; ++i)
+	for (i = 0; i < t->nattributes; ++i)
 	{
 		if (t->attributes[i].attnum > offset_column)
 		{
 			fprintf(fout, "ALTER TABLE %s.%s DROP COLUMN %s;\n", t->schema, t->table, t->attributes[i].attname);
+		}
+	}
+}
+
+
+int getAttnumOffset(PGTable *t, PGROption *opts) {
+	int index;
+	int attnum = 0;
+
+	if (t->nattributes != NULL)
+	{
+		for (index = 0; index < t->nattributes; ++index)
+		{
+			if (strcmp(t->attributes[index].attname, opts->offset) == 0)
+			{
+				attnum = t->attributes[index].attnum;
+				break;
+			}
+		}
+	}
+
+	return attnum;
+}
+
+
+void dumpNewColumn(FILE *fout, PGTable *t, PGROption *opts) {
+
+	fprintf(fout, "ALTER TABLE %s.%s ADD COLUMN %s %s;\n", t->schema, t->table, opts->column, opts->type);
+
+}
+
+
+void dumpColumnTable(FILE *fout, PGTable *t, PGROption *opts) {
+	/*search offset column*/
+	int offset_column = getAttnumOffset(t, opts);
+
+	int i;
+	for (i = 0; i < t->nattributes; ++i)
+	{
+		if (t->attributes[i].attnum > offset_column)
+		{
+			fprintf(fout, "ALTER TABLE %s.%s ADD COLUMN %s %s", t->schema, t->table, t->attributes[i].attname, t->attributes[i].atttypname);
+			
+			if (t->attributes[i].attcollation != NULL)
+			fprintf(fout, " COLLATE \"%s\"", t->attributes[i].attcollation);
+
+			/* default */
+			if (t->attributes[i].attdefexpr != NULL)
+				fprintf(fout, " DEFAULT %s", t->attributes[i].attdefexpr);
+
+			/* not null */
+			if (t->attributes[i].attnotnull)
+				fprintf(fout, " NOT NULL");
+
+			fprintf(fout, ";\n");
 		}
 	}
 }

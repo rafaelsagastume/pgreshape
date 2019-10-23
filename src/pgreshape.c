@@ -73,7 +73,7 @@ static void help(void)
 }
 
 
-static void generatePreScript(FILE *fout, PGROption *opts) {
+static void pgreshape(FILE *fout, PGROption *opts) {
 	fprintf(fout, "--\n-- pgreshape %s\n", PGR_VERSION);
 	fprintf(fout, "-- by Rafael Garcia Sagastume Inc.\n");
 	fprintf(fout, "-- Copyright %s.\n", PGR_COPY);
@@ -90,6 +90,9 @@ static void generatePreScript(FILE *fout, PGROption *opts) {
 	/*dump drop foreign keys*/
 	dumpDropForeignKey(fout, t);
 
+	/*dump drop dependent views*/
+	dumpDropDependentView(fout, t);
+
 	/*create table temp for backup data*/
 	fprintf(fout, "\n");
 	dumpCreateTempTableBackup(fout, t);
@@ -103,6 +106,19 @@ static void generatePreScript(FILE *fout, PGROption *opts) {
 
 	/*dump drop columns on table*/
 	dumpDropTableColumn(fout, t, opts);
+
+
+
+	/*
+	 *
+	 * process for reshape the table with its attributes and dependencies
+	 *
+	 */
+	/*create new column*/
+	dumpNewColumn(fout, t, opts);
+
+	/*recreate the processed columns*/
+	dumpColumnTable(fout, t, opts);
 }
 
 
@@ -136,7 +152,7 @@ static void getTableObjects(PGconn *c, PGROption *opts) {
 	/*Search all views referenced to the table*/
 	getDependentViews(c, t);
 
-	printf("OID:[%d] Tabla:[%s] -> NUnique [%d]\n", t->oid, t->table, t->nunique);
+	printf("OID:[%d] Tabla:[%s]\n", t->oid, t->table);
 }
 
 
@@ -219,11 +235,18 @@ int main(int argc, char const *argv[])
 				exit(EXIT_FAILURE);
 			}
 
-
 			/*extract the necessary objects for the first phase of the procedure*/
 			getTableObjects(conn, opts);
 
-			generatePreScript(output, opts);
+
+			/*offset must be different from primary keys*/
+			if (getAttnumOffset(t, opts) <= 0)
+			{
+				printf("offset not specified : \"%s\"\n", opts->offset);
+				exit(EXIT_FAILURE);
+			}
+
+			pgreshape(output, opts);
 
 		} else {
 			printf("output file not specified.\n");	
