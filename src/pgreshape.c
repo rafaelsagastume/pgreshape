@@ -123,6 +123,12 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	/*dump to generate the foreign keys again*/
 	fprintf(fout, "\n");
 	dumpCreateForeignKey(fout, t);
+
+	/*dump to generate index*/
+	dumpCreateIndex(fout, t);
+
+	/*dump to generate unique constraint*/
+	dumpCreateUnique(fout, t);
 }
 
 

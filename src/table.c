@@ -350,3 +350,20 @@ void dumpCreateForeignKey(FILE *fout, PGTable *t) {
 		fprintf(fout, ";\n");
 	}
 }
+
+void dumpCreateIndex(FILE *fout, PGTable *t) {
+	int i;
+	for (i = 0; i < t->nindexes; i++)
+	{
+		fprintf(fout, "\n%s;\n", t->indexes[i].indexdef);
+	}
+}
+
+
+void dumpCreateUnique(FILE *fout, PGTable *t) {
+	int i;
+	for (i = 0; i < t->nunique; i++)
+	{
+		fprintf(fout, "\n%s;\n", t->unique[i].indexdef);
+	}
+}
