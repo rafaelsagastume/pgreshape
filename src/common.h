@@ -81,6 +81,9 @@ typedef struct PGTable
 	PGForeignKey *foreignkeys;
 	int nviews;
 	PGView *views;
+	char *primary_keys;
+	char *primary_keys_aa;
+	char *primary_keys_nn;
 } PGTable;
 
 typedef struct PGROption {

@@ -27,6 +27,8 @@
 #include "common.h"
 #include "table.h"
 #include "view.h"
+#include "update.h"
+#include "trigger.h"
 #include <libpq-fe.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -80,6 +82,8 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	fprintf(fout, "--");
 
 	fprintf(fout, "\n\nBEGIN;\n");
+	fprintf(fout, "\nSET session_replication_role = replica;\n\n");
+	dumpDisableTriggerAll(fout, t);
 
 	/*dump drop unique*/
 	dumpDropUnique(fout, t);
@@ -132,6 +136,13 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 
 	/*dump to generate dependent views*/
 	dumpCreateCreateView(fout, t);
+
+	/*retrieve temporary backup information*/
+	dumpUpdateData(fout, t, opts);
+
+
+	dumpEnableTriggerAll(fout, t);
+	fprintf(fout, "\n\nSET session_replication_role = DEFAULT;\n");
 }
 
 

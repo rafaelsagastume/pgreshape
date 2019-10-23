@@ -29,9 +29,44 @@ PGTable * getTable(PGconn *c, PGROption *opts)
 	} else
 		t = NULL;
 
+	getPrimaryKeys(c, t);
+
 	PQclear(res);
 	return t;
 }
+
+
+void getPrimaryKeys(PGconn *c, PGTable *t){
+	PGresult	*res;
+	char *query = NULL;
+	int i;
+	int n;
+
+	asprintf(&query, 
+		"SELECT array_to_string(array_agg(kcu.column_name::text), ', ')primarys, array_to_string(array_agg('a.'||kcu.column_name::text), ', ')primarys_aa, array_to_string(array_agg('n1.'||kcu.column_name::text), ', ')primarys_nn FROM information_schema.table_constraints tc LEFT JOIN information_schema.key_column_usage kcu ON tc.constraint_catalog = kcu.constraint_catalog AND tc.constraint_schema = kcu.constraint_schema AND tc.constraint_name = kcu.constraint_name WHERE lower(tc.constraint_type) = ('primary key') AND tc.table_schema = '%s' AND tc.table_name = '%s' GROUP BY kcu.column_name", t->schema, t->table);
+
+	res = PQexec(c, query);
+	
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		printf("query failed: %s\n", PQresultErrorMessage(res));
+		PQclear(res);
+		PQfinish(c);
+		exit(EXIT_FAILURE);
+	}
+
+	n = PQntuples(res);
+	if (n > 0) {
+		t->primary_keys = strdup(PQgetvalue(res, 0, PQfnumber(res, "primarys")));
+		t->primary_keys_nn = strdup(PQgetvalue(res, 0, PQfnumber(res, "primarys_nn")));
+		t->primary_keys_aa = strdup(PQgetvalue(res, 0, PQfnumber(res, "primarys_aa")));
+	} else {
+		t->primary_keys = NULL;
+		t->primary_keys_nn = NULL;
+		t->primary_keys_aa = NULL;
+	}
+}
+
 
 
 void getTableAttributes(PGconn *c, PGTable *t) {
