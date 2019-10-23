@@ -74,7 +74,6 @@ void dumpCreateCreateView(FILE *fout, PGTable *t) {
 			fprintf(fout, "MATERIALIZED VIEW ");
 		}
  
-		fprintf(fout, "IF NOT EXISTS ");
 		fprintf(fout, "%s.%s", t->views[i].schema, t->views[i].view);
 
 		/* reloptions */

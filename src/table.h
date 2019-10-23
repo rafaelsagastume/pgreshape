@@ -19,5 +19,6 @@ void dumpColumnTable(FILE *fout, PGTable *t, PGROption *opts);
 void dumpCreateForeignKey(FILE *fout, PGTable *t);
 void dumpCreateIndex(FILE *fout, PGTable *t);
 void dumpCreateUnique(FILE *fout, PGTable *t);
+int existsColumn(PGTable *t, char *column);
 
 #endif

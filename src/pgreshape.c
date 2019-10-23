@@ -270,6 +270,13 @@ int main(int argc, char const *argv[])
 				exit(EXIT_FAILURE);
 			}
 
+
+			if (existsColumn(t, opts->column) != 0)
+			{
+				printf("the new column really exists : \"%s\"\n", opts->column);
+				exit(EXIT_FAILURE);
+			}
+
 			pgreshape(output, opts);
 
 		} else {

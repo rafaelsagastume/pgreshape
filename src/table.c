@@ -43,7 +43,7 @@ void getPrimaryKeys(PGconn *c, PGTable *t){
 	int n;
 
 	asprintf(&query, 
-		"SELECT array_to_string(array_agg(kcu.column_name::text), ', ')primarys, array_to_string(array_agg('a.'||kcu.column_name::text), ', ')primarys_aa, array_to_string(array_agg('n1.'||kcu.column_name::text), ', ')primarys_nn FROM information_schema.table_constraints tc LEFT JOIN information_schema.key_column_usage kcu ON tc.constraint_catalog = kcu.constraint_catalog AND tc.constraint_schema = kcu.constraint_schema AND tc.constraint_name = kcu.constraint_name WHERE lower(tc.constraint_type) = ('primary key') AND tc.table_schema = '%s' AND tc.table_name = '%s' GROUP BY kcu.column_name", t->schema, t->table);
+		"SELECT array_to_string(array_agg(kcu.column_name::text), ', ')primarys, array_to_string(array_agg('a.'||kcu.column_name::text), ', ')primarys_aa, array_to_string(array_agg('n.'||kcu.column_name::text), ', ')primarys_nn FROM information_schema.table_constraints tc LEFT JOIN information_schema.key_column_usage kcu ON tc.constraint_catalog = kcu.constraint_catalog AND tc.constraint_schema = kcu.constraint_schema AND tc.constraint_name = kcu.constraint_name WHERE lower(tc.constraint_type) = ('primary key') AND tc.table_schema = '%s' AND tc.table_name = '%s' GROUP BY kcu.column_name", t->schema, t->table);
 
 	res = PQexec(c, query);
 	
@@ -330,6 +330,26 @@ int getAttnumOffset(PGTable *t, PGROption *opts) {
 		for (index = 0; index < t->nattributes; ++index)
 		{
 			if (strcmp(t->attributes[index].attname, opts->offset) == 0)
+			{
+				attnum = t->attributes[index].attnum;
+				break;
+			}
+		}
+	}
+
+	return attnum;
+}
+
+
+int existsColumn(PGTable *t, char *column) {
+	int index;
+	int attnum = 0;
+
+	if (t->nattributes != NULL)
+	{
+		for (index = 0; index < t->nattributes; ++index)
+		{
+			if (strcmp(t->attributes[index].attname, column) == 0)
 			{
 				attnum = t->attributes[index].attnum;
 				break;
