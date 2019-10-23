@@ -119,6 +119,10 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 
 	/*recreate the processed columns*/
 	dumpColumnTable(fout, t, opts);
+
+	/*dump to generate the foreign keys again*/
+	fprintf(fout, "\n");
+	dumpCreateForeignKey(fout, t);
 }
 
 

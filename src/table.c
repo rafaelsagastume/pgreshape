@@ -339,3 +339,14 @@ void dumpColumnTable(FILE *fout, PGTable *t, PGROption *opts) {
 		}
 	}
 }
+
+
+void dumpCreateForeignKey(FILE *fout, PGTable *t) {
+	int i;
+	for (i = 0; i < t->nforeignkey; i++)
+	{
+		fprintf(fout, "ALTER TABLE ONLY %s.%s\n", t->schema, t->table);
+		fprintf(fout, "\tADD CONSTRAINT %s %s", t->foreignkeys[i].conname, t->foreignkeys[i].condef);
+		fprintf(fout, ";\n");
+	}
+}

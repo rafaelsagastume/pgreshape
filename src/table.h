@@ -16,5 +16,6 @@ void dumpDropTableColumn(FILE *fout, PGTable *t, PGROption *opts);
 int getAttnumOffset(PGTable *t, PGROption *opts);
 void dumpNewColumn(FILE *fout, PGTable *t, PGROption *opts);
 void dumpColumnTable(FILE *fout, PGTable *t, PGROption *opts);
+void dumpCreateForeignKey(FILE *fout, PGTable *t);
 
 #endif
