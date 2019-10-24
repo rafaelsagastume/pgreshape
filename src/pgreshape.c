@@ -123,7 +123,7 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 
 	/*recreate the processed columns*/
 	dumpColumnTable(fout, t, opts);
-	
+
 	/*retrieve temporary backup information*/
 	fprintf(fout, "\n");
 	dumpUpdateData(fout, t, opts);
@@ -144,6 +144,9 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	fprintf(fout, "\n");
 	dumpEnableTriggerAll(fout, t);
 	fprintf(fout, "\n\nSET session_replication_role = DEFAULT;\n");
+
+	fprintf(fout, "\n--COMMIT;\n");
+	fprintf(fout, "\n--ROLLBACK;\n");
 }
 
 
