@@ -123,6 +123,10 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 
 	/*recreate the processed columns*/
 	dumpColumnTable(fout, t, opts);
+	
+	/*retrieve temporary backup information*/
+	fprintf(fout, "\n");
+	dumpUpdateData(fout, t, opts);
 
 	/*dump to generate the foreign keys again*/
 	fprintf(fout, "\n");
@@ -137,10 +141,7 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	/*dump to generate dependent views*/
 	dumpCreateCreateView(fout, t);
 
-	/*retrieve temporary backup information*/
-	dumpUpdateData(fout, t, opts);
-
-
+	fprintf(fout, "\n");
 	dumpEnableTriggerAll(fout, t);
 	fprintf(fout, "\n\nSET session_replication_role = DEFAULT;\n");
 }

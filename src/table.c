@@ -302,7 +302,7 @@ void dumpDropForeignKey(FILE *fout, PGTable *t) {
 
 
 void dumpCreateTempTableBackup(FILE *fout, PGTable *t) {
-	fprintf(fout, "CREATE TABLE %s.%s_reshape_bk AS SELECT * FROM %s.%s ORDER BY id DESC;\n", t->schema, t->table, t->schema, t->table);
+	fprintf(fout, "CREATE TABLE %s.%s_reshape_bk AS SELECT * FROM %s.%s ORDER BY 1 DESC;\n", t->schema, t->table, t->schema, t->table);
 }
 
 
@@ -386,9 +386,9 @@ void dumpColumnTable(FILE *fout, PGTable *t, PGROption *opts) {
 			if (t->attributes[i].attdefexpr != NULL)
 				fprintf(fout, " DEFAULT %s", t->attributes[i].attdefexpr);
 
-			/* not null */
-			if (t->attributes[i].attnotnull)
-				fprintf(fout, " NOT NULL");
+			/* not null, por motivos del backup, se crean en el ultimo proceso*/
+			/*if (t->attributes[i].attnotnull)
+				fprintf(fout, " NOT NULL");*/
 
 			fprintf(fout, ";\n");
 		}
