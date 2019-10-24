@@ -413,6 +413,25 @@ void dumpSetNotNullColumnTable(FILE *fout, PGTable *t, PGROption *opts) {
 }
 
 
+void dumpSetCommentColumnTable(FILE *fout, PGTable *t, PGROption *opts) {
+	/*search offset column*/
+	int offset_column = getAttnumOffset(t, opts);
+	int i;
+
+	fprintf(fout, "\n");
+	for (i = 0; i < t->nattributes; ++i)
+	{
+		if (t->attributes[i].attnum > offset_column)
+		{
+			/* not null*/
+			if (t->attributes[i].comment) {
+				fprintf(fout, "COMMENT ON COLUMN %s.%s.%s IS %s;\n", t->schema, t->table, t->attributes[i].attname, t->attributes[i].comment);
+			}
+		}
+	}
+}
+
+
 void dumpCreateForeignKey(FILE *fout, PGTable *t) {
 	int i;
 	for (i = 0; i < t->nforeignkey; i++)
