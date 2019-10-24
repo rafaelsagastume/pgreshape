@@ -71,7 +71,35 @@ static void pg_close(PGconn *conn) {
 
 static void help(void)
 {
-	printf("%s: Embed the new column according to the desired position in any table.\n\n", PGR_NAME);
+	printf("%s: Embed the new column according to the desired position in any table.\n", PGR_NAME);
+	printf("\n");
+	printf("  -c, =FILENAME       configuration file*\n");
+	printf("  -s                  the name of the database schema is configured\n");
+	printf("  -t                  the name of the database table is configured\n");
+	printf("  -offset             it is configured from the column of the database table\n");
+	printf("                      that will subsequently have the new column\n");
+	printf("  -column             the name of the new column is configured\n");
+	printf("  -type               the type of the new column is set\n");
+	printf("                      example: \n");
+	printf("                          -type boolean\n");
+	printf("                          or -type 'numeric (15, 2) default 10.20'\n");
+	printf("                          or -type \"text default 'hola'\"\n");
+	printf("  example:\n");
+	printf("  pgreshape -c /opt/reshape.conf -s rrhh -t expediente -offset emisor -column nueva -type 'boolean'\n");
+	printf("\n");
+	printf("\n");
+	printf("  file.sql            the name of the output file is file.sql in the execution path'\n");
+	printf("\n");
+	printf("  reshape.conf\n");
+	printf("              host = localhost\n");
+	printf("              port = 5432\n");
+	printf("              dbname = db1\n");
+	printf("              user = postgres\n");
+	printf("              password = 123\n");
+	printf("              file = \n");
+	printf("\n");
+	printf("  --help              show this help, then exit\n");
+	printf("  --version           output version information, then exit\n");
 }
 
 
@@ -206,7 +234,7 @@ int main(int argc, char const *argv[])
 		
 		if (strcmp(argv[1], "--version") == 0)
 		{
-			printf(PGR_NAME " " PGR_VERSION "\n");
+			printf(PGR_NAME " " PGR_VERSION "\n"CREATOR"\n"DIR"\n");
 			exit(EXIT_SUCCESS);
 		}
 
