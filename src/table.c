@@ -387,10 +387,27 @@ void dumpColumnTable(FILE *fout, PGTable *t, PGROption *opts) {
 				fprintf(fout, " DEFAULT %s", t->attributes[i].attdefexpr);
 
 			/* not null, por motivos del backup, se crean en el ultimo proceso*/
-			/*if (t->attributes[i].attnotnull)
-				fprintf(fout, " NOT NULL");*/
 
 			fprintf(fout, ";\n");
+		}
+	}
+}
+
+
+void dumpSetNotNullColumnTable(FILE *fout, PGTable *t, PGROption *opts) {
+	/*search offset column*/
+	int offset_column = getAttnumOffset(t, opts);
+	int i;
+
+	fprintf(fout, "\n");
+	for (i = 0; i < t->nattributes; ++i)
+	{
+		if (t->attributes[i].attnum > offset_column)
+		{
+			/* not null*/
+			if (t->attributes[i].attnotnull) {
+				fprintf(fout, "ALTER TABLE %s.%s ALTER COLUMN %s SET NOT NULL;\n", t->schema, t->table, t->attributes[i].attname);
+			}
 		}
 	}
 }
