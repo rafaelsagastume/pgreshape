@@ -46,6 +46,11 @@ It helps you to generate an sql script that looks for the dependencies of the ta
 			<td></td>
 		</tr>
 		<tr>
+			<td>ACL on Columns</td>
+			<td>not implemented</td>
+			<td></td>
+		</tr>
+		<tr>
 			<td>Comment</td>
 			<td>complete</td>
 			<td></td>
@@ -67,11 +72,11 @@ It helps you to generate an sql script that looks for the dependencies of the ta
 		</tr>
 		<tr>
 			<td>Views recursive</td>
-			<td>complete</td>
+			<td>partial</td>
 			<td></td>
 		</tr>
 		<tr>
-			<td>ACL</td>
+			<td>ACL on View</td>
 			<td>not implemented</td>
 			<td></td>
 		</tr>
