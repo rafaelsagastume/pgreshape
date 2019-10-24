@@ -131,6 +131,9 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	/*dump to generate not null on column*/
 	dumpSetNotNullColumnTable(fout, t, opts);
 
+	/*dump to generate comment on columns*/
+	dumpSetCommentColumnTable(fout, t, opts);
+
 	/*dump to generate the foreign keys again*/
 	fprintf(fout, "\n");
 	dumpCreateForeignKey(fout, t);
