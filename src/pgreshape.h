@@ -16,6 +16,8 @@
 #define PGR_SUPPORTED		110000	/* first supported version */
 #define PGR_SUPPORTED_STR	"11.0.0"
 #define PGR_COPY			"2019"
+#define CREATOR             "by Rafael Fernando Garcia Sagastume"
+#define DIR                 "https://github.com/rafaelsagastume/pgreshape.git"
 
 
 #endif
