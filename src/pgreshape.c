@@ -128,6 +128,9 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	fprintf(fout, "\n");
 	dumpUpdateData(fout, t, opts);
 
+	/*dump to generate not null on column*/
+	dumpSetNotNullColumnTable(fout, t, opts);
+
 	/*dump to generate the foreign keys again*/
 	fprintf(fout, "\n");
 	dumpCreateForeignKey(fout, t);
