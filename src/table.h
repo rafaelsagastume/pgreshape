@@ -25,5 +25,6 @@ int existsColumn(PGTable *t, char *column);
 void dumpSetNotNullColumnTable(FILE *fout, PGTable *t, PGROption *opts);
 void dumpSetCommentColumnTable(FILE *fout, PGTable *t, PGROption *opts);
 void dumpAclColumnTable (FILE *fout, PGTable *t, PGROption *opts);
+void dumpOptionsColumnTable (FILE *fout, PGTable *t, PGROption *opts);
 
 #endif
