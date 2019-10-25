@@ -93,6 +93,10 @@ void dumpCreateCreateView(FILE *fout, PGTable *t) {
 		free(owner);
 
 
+		/*generate acl on view*/
+		dumpGrantView(fout, OBTable, t->views[i].schema, t->views[i].view, t->views[i].acl);
+		fprintf(fout, "\n");
+
 		/*generate comment to views*/
 		fprintf(fout, "COMMENT ON ");
 		if (t->views[i].relkind == 'v')
