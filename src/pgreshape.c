@@ -162,6 +162,9 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	/*dump acl on columns*/
 	dumpAclColumnTable(fout, t, opts);
 
+	/*dump attoptions on columns*/
+	dumpOptionsColumnTable(fout, t, opts);
+
 	/*dump to generate comment on columns*/
 	dumpSetCommentColumnTable(fout, t, opts);
 

@@ -435,6 +435,29 @@ void dumpAclColumnTable (FILE *fout, PGTable *t, PGROption *opts) {
 }
 
 
+void dumpOptionsColumnTable (FILE *fout, PGTable *t, PGROption *opts) {
+	int offset_column = getAttnumOffset(t, opts);
+	int i;
+
+	fprintf(fout, "\n");
+	for (i = 0; i < t->nattributes; ++i)
+	{
+		if (t->attributes[i].attnum > offset_column)
+		{
+			/* attoptions */
+			if (t->attributes[i].attoptions) {
+				char *attname = formatObjectIdentifier(t->attributes[i].attname);
+
+				fprintf(fout, "\n\n");
+				fprintf(fout, "ALTER TABLE ONLY %s.%s ALTER COLUMN %s SET (%s);\n", t->schema, t->table, attname, t->attributes[i].attoptions);
+
+				free(attname);
+			}
+		}
+	}
+}
+
+
 void dumpSetCommentColumnTable(FILE *fout, PGTable *t, PGROption *opts) {
 	/*search offset column*/
 	int offset_column = getAttnumOffset(t, opts);
