@@ -26,9 +26,9 @@ typedef struct List
 	Acl	*leaf;
 } List;
 
-char * formatAcl(char *s);
-void dumpAcl(FILE *fout, int obj, char *sch, char *name, char *privs, char *grant);
-void dumpGrantView(FILE *fout, int obj, char *sch, char *name, char *acla);
+char * formatAcl(char *s, char *c);
+void dumpAcl(FILE *fout, int obj, char *sch, char *name, char *privs, char *grant, char *cols);
+void dumpGrant(FILE *fout, int obj, char *sch, char *name, char *acla, char *cols);
 Acl *splitAcl(char *a);
 List *shapeACL(char *acl);
 void freeAclItem(Acl *item);

@@ -2,6 +2,7 @@
 #define TABLE_H
 
 #include "common.h"
+#include "acl.h"
 
 PGTable * getTable(PGconn *c, PGROption *opts);
 void getPrimaryKeys(PGconn *c, PGTable *t);
@@ -23,5 +24,6 @@ void dumpCreateUnique(FILE *fout, PGTable *t);
 int existsColumn(PGTable *t, char *column);
 void dumpSetNotNullColumnTable(FILE *fout, PGTable *t, PGROption *opts);
 void dumpSetCommentColumnTable(FILE *fout, PGTable *t, PGROption *opts);
+void dumpAclColumnTable (FILE *fout, PGTable *t, PGROption *opts);
 
 #endif
