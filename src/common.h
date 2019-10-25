@@ -11,11 +11,16 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <libpq-fe.h>
 #include <c.h>
+
 typedef struct PGForeignKey
 {
 	char *conname;
