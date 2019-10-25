@@ -1,5 +1,5 @@
-#ifndef TABLE_H
-#define TABLE_H
+#ifndef VIEW_H
+#define VIEW_H
 
 #include "common.h"
 #include "acl.h"

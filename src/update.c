@@ -1,4 +1,5 @@
 #include "update.h"
+#include "table.h"
 
 void dumpUpdateData(FILE *fout, PGTable *t, PGROption *opts) {
 

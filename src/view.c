@@ -1,9 +1,10 @@
 #include "view.h"
+#include <stdio.h>
 
 void getDependentViews(PGconn *c, PGTable *t)
 {
 	PGresult	*res;
-	char *query = NULL;
+	char *query;
 	int i;
 
 	asprintf(&query, 
@@ -59,7 +60,7 @@ void dumpDropDependentView(FILE *fout, PGTable *t) {
 
 
 void dumpCreateCreateView(FILE *fout, PGTable *t) {
-
+	char *owner;
 	int i;
 	for (i = 0; i < t->nviews; i++)
 	{
@@ -88,7 +89,7 @@ void dumpCreateCreateView(FILE *fout, PGTable *t) {
 			fprintf(fout, "\n WITH %s CHECK OPTION", t->views[i].checkoption);
 
 		/*generate owner*/
-		char	*owner = formatObjectIdentifier(t->views[i].relowner);
+		owner = formatObjectIdentifier(t->views[i].relowner);
 		fprintf(fout, "ALTER VIEW %s.%s OWNER TO %s;\n", t->views[i].schema, t->views[i].view, t->views[i].relowner);
 		free(owner);
 
