@@ -95,7 +95,7 @@ void dumpCreateCreateView(FILE *fout, PGTable *t) {
 
 
 		/*generate acl on view*/
-		dumpGrantView(fout, OBTable, t->views[i].schema, t->views[i].view, t->views[i].acl);
+		dumpGrant(fout, OBTable, t->views[i].schema, t->views[i].view, t->views[i].acl, NULL);
 		fprintf(fout, "\n");
 
 		/*generate comment to views*/

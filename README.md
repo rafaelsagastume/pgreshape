@@ -47,7 +47,7 @@ It helps you to generate an sql script that looks for the dependencies of the ta
 		</tr>
 		<tr>
 			<td>ACL on Columns</td>
-			<td>not implemented</td>
+			<td>complete</td>
 			<td></td>
 		</tr>
 		<tr>

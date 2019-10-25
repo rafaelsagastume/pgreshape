@@ -10,19 +10,25 @@
 
 #include "acl.h"
 
-char * formatAcl(char *s) {
+char * formatAcl(char *s, char *c) {
 	char	*acl_string, *ptr;
 	size_t	ln_size;
 	bool	first = true;
 	int		i;
+	size_t	len_col = 0;
+	size_t	len_colto = 0;
 
 	if (s == NULL){
 		return NULL;
 	}
 
 	ln_size = strlen(s);
+	if (c) {
+		len_col = strlen(c);
+		len_colto = len_col + 3;
+	}
 
-	acl_string = (char *) malloc (((ln_size * 20 + (ln_size - 1) * 2)) * sizeof(char));
+	acl_string = (char *) malloc (((ln_size * 20 + (ln_size - 1) * 2) + len_colto) * sizeof(char));
 	acl_string[0] = '\0'; /*final char string*/
 	ptr = acl_string;
 
@@ -86,6 +92,16 @@ char * formatAcl(char *s) {
 				strncpy(ptr, "TEMPORARY", 9);
 				ptr += 9;
 				break;
+		}
+
+		if (len_col > 0)
+		{
+			strncpy(ptr, " (", 2);
+			ptr += 2;
+			strncpy(ptr, c, len_col);
+			ptr += len_col;
+			strncpy(ptr, ")", 1);
+			ptr += 1;
 		}
 	}
 
@@ -256,7 +272,7 @@ void freeAclList(List *acl_list) {
 }
 
 
-void dumpAcl(FILE *fout, int obj, char *sch, char *name, char *privs, char *grant) {
+void dumpAcl(FILE *fout, int obj, char *sch, char *name, char *privs, char *grant, char *cols) {
 	char *schema;
 	char *objname;
 	char *owner;
@@ -273,7 +289,7 @@ void dumpAcl(FILE *fout, int obj, char *sch, char *name, char *privs, char *gran
 	else
 		owner = formatObjectIdentifier(grant);
 
-	p = formatAcl(privs);
+	p = formatAcl(privs, cols);
 
 	fprintf(fout, "\n");
 	fprintf(fout, "GRANT %s", p);
@@ -303,7 +319,7 @@ void dumpAcl(FILE *fout, int obj, char *sch, char *name, char *privs, char *gran
 }
 
 
-void dumpGrantView(FILE *fout, int obj, char *sch, char *name, char *acla) {
+void dumpGrant(FILE *fout, int obj, char *sch, char *name, char *acla, char *cols) {
 	List *ala;
 	Acl	*tmpa = NULL;
 
@@ -314,7 +330,7 @@ void dumpGrantView(FILE *fout, int obj, char *sch, char *name, char *acla) {
 
 	while (tmpa != NULL)
 	{
-		dumpAcl(fout, obj, sch, name, tmpa->privileges, tmpa->grant);
+		dumpAcl(fout, obj, sch, name, tmpa->privileges, tmpa->grant, cols);
 		tmpa = tmpa->next;
 	}
 
