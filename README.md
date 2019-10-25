@@ -72,12 +72,12 @@ It helps you to generate an sql script that looks for the dependencies of the ta
 		</tr>
 		<tr>
 			<td>Views recursive</td>
-			<td>partial</td>
+			<td>complete</td>
 			<td></td>
 		</tr>
 		<tr>
 			<td>ACL on View</td>
-			<td>not implemented</td>
+			<td>complete</td>
 			<td></td>
 		</tr>
 	</tbody>

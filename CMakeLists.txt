@@ -16,6 +16,8 @@ add_executable(pgreshape
 	src/update.h
 	src/trigger.c
 	src/trigger.h
+	src/acl.c
+	src/acl.h
 )
 
 # ignore Windows warnings
