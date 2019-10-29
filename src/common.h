@@ -43,8 +43,10 @@ typedef struct PGUnique
 typedef struct PGIndex
 {
 	char contype;
+	char *schema;
 	char *relname;
 	char *indexdef;
+	char *comment;
 } PGIndex;
 
 typedef struct PGAttribute
