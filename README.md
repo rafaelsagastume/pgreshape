@@ -99,12 +99,28 @@ It helps you to generate an sql script that looks for the dependencies of the ta
 </table>
 
 
+
+### requirements:
+```
+$ gcc
+$ postgresql
+$ postgresql-client
+$ postgresql-contrib
+$ postgresql-server-dev
+$ libpq-dev
+```
+
 ### compile:
 ```
 $ git clone https://github.com/rafaelsagastume/pgreshape.git
 $ cd pgquarrel
 $ cmake .
 $ make
+```
+
+### install:
+```
+$ sudo make install
 ```
 
 ### reshape.conf:
