@@ -56,18 +56,33 @@ It helps you to generate an sql script that looks for the dependencies of the ta
 			<td></td>
 		</tr>
 		<tr>
-			<td>Foreign Key</td>
-			<td>complete</td>
-			<td></td>
-		</tr>
-		<tr>
 			<td>Index</td>
 			<td>complete</td>
 			<td></td>
 		</tr>
 		<tr>
-			<td>Unique</td>
+			<td>Foreign Key</td>
 			<td>complete</td>
+			<td></td>
+		</tr>		
+		<tr>
+			<td>Unique constraint</td>
+			<td>complete</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>Check constraint</td>
+			<td>complete</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>Trigger constraint</td>
+			<td>not implemented</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>Exclusion constraint</td>
+			<td>not implemented</td>
 			<td></td>
 		</tr>
 		<tr>

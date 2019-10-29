@@ -26,5 +26,8 @@ void dumpSetNotNullColumnTable(FILE *fout, PGTable *t, PGROption *opts);
 void dumpSetCommentColumnTable(FILE *fout, PGTable *t, PGROption *opts);
 void dumpAclColumnTable (FILE *fout, PGTable *t, PGROption *opts);
 void dumpOptionsColumnTable (FILE *fout, PGTable *t, PGROption *opts);
+void getTableCheckConstraint(PGconn *c, PGTable *t);
+void dumpDropCheckConstraint(FILE *fout, PGTable *t);
+void dumpCreateCheckConstraint(FILE *fout, PGTable *t);
 
 #endif
