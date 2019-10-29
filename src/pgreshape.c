@@ -122,6 +122,9 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	/*dump drop foreign keys*/
 	dumpDropForeignKey(fout, t);
 
+	/*dump drop check constraint*/
+	dumpDropCheckConstraint(fout, t);
+
 	/*dump drop dependent views*/
 	dumpDropDependentView(fout, t);
 
@@ -172,6 +175,10 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	fprintf(fout, "\n");
 	dumpCreateForeignKey(fout, t);
 
+	/*dump to generate the check constraint again*/
+	fprintf(fout, "\n");
+	dumpCreateCheckConstraint(fout, t);
+
 	/*dump to generate index*/
 	dumpCreateIndex(fout, t);
 
@@ -216,6 +223,9 @@ static void getTableObjects(PGconn *c, PGROption *opts) {
 
 	/*Search all foreign keys referenced to the table*/
 	getTableForeignKey(c, t);
+
+	/*Search all check referenced to the table*/
+	getTableCheckConstraint(c, t);
 
 	/*Search all views referenced to the table*/
 	getDependentViews(c, t);

@@ -27,6 +27,12 @@ typedef struct PGForeignKey
 	char *condef;
 } PGForeignKey;
 
+typedef struct PGCheckConstraint
+{
+	char *conname;
+	char *condef;
+} PGCheckConstraint;
+
 typedef struct PGUnique
 {
 	char contype;
@@ -89,6 +95,8 @@ typedef struct PGTable
 	char *primary_keys;
 	char *primary_keys_aa;
 	char *primary_keys_nn;
+	int ncheck;
+	PGCheckConstraint *checks;
 } PGTable;
 
 typedef struct PGROption {
