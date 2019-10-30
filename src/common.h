@@ -36,6 +36,7 @@ typedef struct PGCheckConstraint
 typedef struct PGUnique
 {
 	char contype;
+	char *tablespace;
 	char *schema;
 	char *table;
 	char *unique_name;
