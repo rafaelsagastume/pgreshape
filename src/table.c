@@ -229,7 +229,7 @@ void getTableUnique(PGconn *c, PGTable *t) {
 	int i;
 
 	asprintf(&query, 
-		"SELECT contype, c2.relname, pg_catalog.pg_get_indexdef(i.indexrelid, 0, true) as indexdef FROM pg_catalog.pg_class c inner join pg_catalog.pg_index i ON (c.oid = i.indrelid) inner join pg_catalog.pg_class c2 ON (i.indexrelid = c2.oid AND i.indisprimary <> true) inner join pg_catalog.pg_namespace sp ON (sp.oid = c2.relnamespace) LEFT JOIN pg_catalog.pg_constraint con ON (conrelid = i.indrelid AND conindid = i.indexrelid AND contype IN ('u')) WHERE contype NOTNULL AND c.oid = %u ORDER BY i.indisprimary DESC, i.indisunique DESC, c2.relname;", t->oid);
+		"SELECT contype, sp.nspname as schema, c.relname as table, c2.relname as unique_name, (SELECT array_to_string(array_agg(a.attname), ', ') FROM pg_attribute a WHERE a.attrelid = c.oid  AND a.attnum in (select unnest(con.conkey))) as columns, /*pg_catalog.pg_get_indexdef(i.indexrelid, 0, true) as indexdef,*/ obj_description(c2.oid) AS description FROM pg_catalog.pg_class c inner join pg_catalog.pg_index i ON (c.oid = i.indrelid) inner join pg_catalog.pg_class c2 ON (i.indexrelid = c2.oid AND i.indisprimary <> true) inner join pg_catalog.pg_namespace sp ON (sp.oid = c2.relnamespace) LEFT JOIN pg_catalog.pg_constraint con ON (conrelid = i.indrelid AND conindid = i.indexrelid AND contype IN ('u')) WHERE contype NOTNULL AND c.oid = %u ORDER BY i.indisprimary DESC, i.indisunique DESC, c2.relname;", t->oid);
 
 	res = PQexec(c, query);
 	
@@ -249,9 +249,29 @@ void getTableUnique(PGconn *c, PGTable *t) {
 
 	for (i = 0; i < t->nunique; i++)
 	{
+		char *withoutescape;
+
 		t->unique[i].contype = PQgetvalue(res, i, PQfnumber(res, "contype"))[0];
-		t->unique[i].relname = strdup(PQgetvalue(res, i, PQfnumber(res, "relname")));
-		t->unique[i].indexdef = strdup(PQgetvalue(res, i, PQfnumber(res, "indexdef")));
+		t->unique[i].schema = strdup(PQgetvalue(res, i, PQfnumber(res, "schema")));
+		t->unique[i].table = strdup(PQgetvalue(res, i, PQfnumber(res, "table")));
+		t->unique[i].unique_name = strdup(PQgetvalue(res, i, PQfnumber(res, "unique_name")));
+		t->unique[i].columns = strdup(PQgetvalue(res, i, PQfnumber(res, "columns")));
+		t->unique[i].comment = strdup(PQgetvalue(res, i, PQfnumber(res, "description")));
+
+		if (PQgetisnull(res, i, PQfnumber(res, "description")))
+			t->unique[i].comment = NULL;
+		else
+		{
+			withoutescape = PQgetvalue(res, i, PQfnumber(res, "description"));
+			t->unique[i].comment = PQescapeLiteral(c, withoutescape, strlen(withoutescape));
+			if (t->unique[i].comment == NULL)
+			{
+				printf("escaping comment failed: %s", PQerrorMessage(c));
+				PQclear(res);
+				PQfinish(c);
+				exit(EXIT_FAILURE);
+			}
+		}
 	}
 
 	PQclear(res);
@@ -306,7 +326,7 @@ void dumpDropUnique(FILE *fout, PGTable *t) {
 	int i;
 	for (i = 0; i < t->nunique; i++)
 	{
-		fprintf(fout, "ALTER TABLE %s.%s DROP CONSTRAINT %s;\n", t->schema, t->table, t->unique[i].relname);
+		fprintf(fout, "ALTER TABLE %s.%s DROP CONSTRAINT %s;\n", t->unique[i].schema, t->unique[i].table, t->unique[i].unique_name);
 	}
 }
 
@@ -523,7 +543,14 @@ void dumpCreateUnique(FILE *fout, PGTable *t) {
 	int i;
 	for (i = 0; i < t->nunique; i++)
 	{
-		fprintf(fout, "\n%s;\n", t->unique[i].indexdef);
+		fprintf(fout, "\nALTER TABLE %s.%s\n", t->unique[i].schema, t->unique[i].table);
+		fprintf(fout, "\tADD CONSTRAINT %s UNIQUE (%s);\n", t->unique[i].unique_name, t->unique[i].columns);
+
+		if (t->unique[i].comment) {
+			fprintf(fout, "\n");
+			fprintf(fout, "COMMENT ON INDEX %s.%s IS %s;\n",
+					t->unique[i].schema, t->unique[i].unique_name, t->unique[i].comment);
+		}
 	}
 }
 
