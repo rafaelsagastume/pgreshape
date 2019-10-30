@@ -229,7 +229,7 @@ void getTableUnique(PGconn *c, PGTable *t) {
 	int i;
 
 	asprintf(&query, 
-		"SELECT contype, sp.nspname as schema, c.relname as table, c2.relname as unique_name, (SELECT array_to_string(array_agg(a.attname), ', ') FROM pg_attribute a WHERE a.attrelid = c.oid  AND a.attnum in (select unnest(con.conkey))) as columns, /*pg_catalog.pg_get_indexdef(i.indexrelid, 0, true) as indexdef,*/ obj_description(c2.oid) AS description FROM pg_catalog.pg_class c inner join pg_catalog.pg_index i ON (c.oid = i.indrelid) inner join pg_catalog.pg_class c2 ON (i.indexrelid = c2.oid AND i.indisprimary <> true) inner join pg_catalog.pg_namespace sp ON (sp.oid = c2.relnamespace) LEFT JOIN pg_catalog.pg_constraint con ON (conrelid = i.indrelid AND conindid = i.indexrelid AND contype IN ('u')) WHERE contype NOTNULL AND c.oid = %u ORDER BY i.indisprimary DESC, i.indisunique DESC, c2.relname;", t->oid);
+		"SELECT contype, sp.nspname as schema, c.relname as table, c2.relname as unique_name, (SELECT array_to_string(array_agg(a.attname), ', ') FROM pg_attribute a WHERE a.attrelid = c.oid AND a.attnum in (select unnest(con.conkey))) as columns, /*pg_catalog.pg_get_indexdef(i.indexrelid, 0, true) as indexdef,*/ obj_description(c2.oid) AS description, (case when (select tablespace from pg_indexes where indexname = c2.relname limit 1) isnull then  (select spcname from pg_tablespace where oid = (select dattablespace from pg_database  where datname = (select catalog_name from information_schema.schemata where schema_name = sp.nspname))) else (select tablespace from pg_indexes where indexname = c2.relname limit 1) end) as tablespace FROM pg_catalog.pg_class c inner join pg_catalog.pg_index i ON (c.oid = i.indrelid) inner join pg_catalog.pg_class c2 ON (i.indexrelid = c2.oid AND i.indisprimary <> true) inner join pg_catalog.pg_namespace sp ON (sp.oid = c2.relnamespace) LEFT JOIN pg_catalog.pg_constraint con ON (conrelid = i.indrelid AND conindid = i.indexrelid AND contype IN ('u')) WHERE contype NOTNULL AND c.oid = %u ORDER BY i.indisprimary DESC, i.indisunique DESC, c2.relname;", t->oid);
 
 	res = PQexec(c, query);
 	
@@ -252,6 +252,7 @@ void getTableUnique(PGconn *c, PGTable *t) {
 		char *withoutescape;
 
 		t->unique[i].contype = PQgetvalue(res, i, PQfnumber(res, "contype"))[0];
+		t->unique[i].tablespace = strdup(PQgetvalue(res, i, PQfnumber(res, "tablespace")));
 		t->unique[i].schema = strdup(PQgetvalue(res, i, PQfnumber(res, "schema")));
 		t->unique[i].table = strdup(PQgetvalue(res, i, PQfnumber(res, "table")));
 		t->unique[i].unique_name = strdup(PQgetvalue(res, i, PQfnumber(res, "unique_name")));
@@ -544,7 +545,12 @@ void dumpCreateUnique(FILE *fout, PGTable *t) {
 	for (i = 0; i < t->nunique; i++)
 	{
 		fprintf(fout, "\nALTER TABLE %s.%s\n", t->unique[i].schema, t->unique[i].table);
-		fprintf(fout, "\tADD CONSTRAINT %s UNIQUE (%s);\n", t->unique[i].unique_name, t->unique[i].columns);
+		fprintf(fout, "\tADD CONSTRAINT %s UNIQUE (%s)\n", t->unique[i].unique_name, t->unique[i].columns);
+
+		if (t->unique[i].tablespace) {
+			fprintf(fout, "\tUSING INDEX TABLESPACE %s;\n", t->unique[i].tablespace);
+		} else
+			fprintf(fout, ";\n");
 
 		if (t->unique[i].comment) {
 			fprintf(fout, "\n");
