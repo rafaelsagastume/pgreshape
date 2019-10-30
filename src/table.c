@@ -176,7 +176,7 @@ void getTableIndexes(PGconn *c, PGTable *t) {
 	int i;
 
 	asprintf(&query, 
-		"SELECT distinct c.oid, relkind as contype, n.nspname, c.relname, pg_get_indexdef(c.oid) AS indexdef, obj_description(c.oid, 'pg_class') AS description FROM pg_class c INNER JOIN pg_namespace n ON (c.relnamespace = n.oid) INNER JOIN pg_index i ON (i.indexrelid = c.oid) inner join pg_depend d ON (d.objid = c.oid) LEFT JOIN pg_tablespace t ON (c.reltablespace = t.oid) WHERE d.refobjid = %u and relkind = 'i' AND nspname !~ '^pg_' AND nspname <> 'information_schema' AND NOT indisprimary ORDER BY nspname, relname;", t->oid);
+		"SELECT distinct c.oid, relkind as contype, n.nspname, c.relname, pg_get_indexdef(c.oid) AS indexdef, obj_description(c.oid, 'pg_class') AS description, (case when (select tablespace from pg_indexes where indexname = c.relname limit 1) isnull then (select spcname from pg_tablespace where oid = (select dattablespace from pg_database  where datname = (select catalog_name from information_schema.schemata where schema_name = n.nspname))) else (select tablespace from pg_indexes where indexname = c.relname limit 1) end) as tablespace FROM pg_class c INNER JOIN pg_namespace n ON (c.relnamespace = n.oid) INNER JOIN pg_index i ON (i.indexrelid = c.oid) inner join pg_depend d ON (d.objid = c.oid) LEFT JOIN pg_tablespace t ON (c.reltablespace = t.oid) WHERE d.refobjid = %u and relkind = 'i' AND nspname !~ '^pg_' AND nspname <> 'information_schema' AND NOT indisprimary ORDER BY nspname, relname;", t->oid);
 
 	res = PQexec(c, query);
 	
@@ -199,6 +199,14 @@ void getTableIndexes(PGconn *c, PGTable *t) {
 		char *withoutescape;
 
 		t->indexes[i].contype = PQgetvalue(res, i, PQfnumber(res, "contype"))[0];
+
+		if (PQgetisnull(res, i, PQfnumber(res, "tablespace")))
+			t->indexes[i].tablespace = NULL;
+		else
+		{
+			t->indexes[i].tablespace = strdup(PQgetvalue(res, i, PQfnumber(res, "tablespace")));
+		}
+
 		t->indexes[i].schema = strdup(PQgetvalue(res, i, PQfnumber(res, "nspname")));
 		t->indexes[i].relname = strdup(PQgetvalue(res, i, PQfnumber(res, "relname")));
 		t->indexes[i].indexdef = strdup(PQgetvalue(res, i, PQfnumber(res, "indexdef")));
@@ -252,7 +260,14 @@ void getTableUnique(PGconn *c, PGTable *t) {
 		char *withoutescape;
 
 		t->unique[i].contype = PQgetvalue(res, i, PQfnumber(res, "contype"))[0];
-		t->unique[i].tablespace = strdup(PQgetvalue(res, i, PQfnumber(res, "tablespace")));
+		
+		if (PQgetisnull(res, i, PQfnumber(res, "tablespace")))
+			t->unique[i].tablespace = NULL;
+		else
+		{
+			t->unique[i].tablespace = strdup(PQgetvalue(res, i, PQfnumber(res, "tablespace")));
+		}
+
 		t->unique[i].schema = strdup(PQgetvalue(res, i, PQfnumber(res, "schema")));
 		t->unique[i].table = strdup(PQgetvalue(res, i, PQfnumber(res, "table")));
 		t->unique[i].unique_name = strdup(PQgetvalue(res, i, PQfnumber(res, "unique_name")));
@@ -530,7 +545,13 @@ void dumpCreateIndex(FILE *fout, PGTable *t) {
 	int i;
 	for (i = 0; i < t->nindexes; i++)
 	{
-		fprintf(fout, "\n%s;\n", t->indexes[i].indexdef);
+		fprintf(fout, "\n%s\n", t->indexes[i].indexdef);
+
+		if (t->indexes[i].tablespace) {
+			fprintf(fout, "\tTABLESPACE %s;\n", t->indexes[i].tablespace);
+		} else
+			fprintf(fout, ";\n");
+
 		if (t->indexes[i].comment) {
 			fprintf(fout, "\n\n");
 			fprintf(fout, "COMMENT ON INDEX %s.%s IS %s;\n",

@@ -47,6 +47,7 @@ typedef struct PGUnique
 typedef struct PGIndex
 {
 	char contype;
+	char *tablespace;
 	char *schema;
 	char *relname;
 	char *indexdef;
