@@ -35,9 +35,12 @@ typedef struct PGCheckConstraint
 
 typedef struct PGUnique
 {
-	char contype;
-	char *relname;
-	char *indexdef;
+	char *contype;
+	char *schema;
+	char *table;
+	char *unique_name;
+	char *columns;
+	char *comment;
 } PGUnique;
 
 typedef struct PGIndex
