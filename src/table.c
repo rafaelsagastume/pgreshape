@@ -634,3 +634,28 @@ void dumpCreateCheckConstraint(FILE *fout, PGTable *t) {
 		fprintf(fout, ";\n");
 	}
 }
+
+
+int existsTable(PGconn *c, char *schema, char *table)
+{
+	PGresult *res;
+	int n;
+	char *query = NULL;
+
+	asprintf(&query,
+		"select table_name from information_schema.tables where table_schema = '%s' and table_name = '%s';", schema, table);
+	
+	res = PQexec(c, query);
+	
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		printf("query failed: %s\n", PQresultErrorMessage(res));
+		PQclear(res);
+		PQfinish(c);
+		exit(EXIT_FAILURE);
+	}
+	
+	n = PQntuples(res);
+	PQclear(res);
+	return n;
+}

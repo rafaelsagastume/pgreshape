@@ -29,6 +29,7 @@
 #include "view.h"
 #include "update.h"
 #include "trigger.h"
+#include "schema.h"
 #include <libpq-fe.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -312,6 +313,21 @@ int main(int argc, char const *argv[])
 				printf("could not open file \"%s\": %s \n", config->file, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
+
+
+			if (existsSchema(conn, opts->schema) == 0)
+			{
+				printf("schema does not exist : \"%s\"\n", opts->schema);
+				exit(EXIT_FAILURE);
+			}
+
+
+			if (existsTable(conn, opts->schema, opts->table) == 0)
+			{
+				printf("table does not exist : \"%s.%s\"\n", opts->schema, opts->table);
+				exit(EXIT_FAILURE);
+			}
+			
 
 			/*extract the necessary objects for the first phase of the procedure*/
 			getTableObjects(conn, opts);
