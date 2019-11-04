@@ -300,9 +300,12 @@ void dumpAcl(FILE *fout, int obj, char *sch, char *name, char *privs, char *gran
 		case OBTable:
 			fprintf(fout, "TABLE");
 			break;
+		case OBSequence:
+			fprintf(fout, "SEQUENCE");
+			break;
 	}
 
-	if (obj == OBTable) {
+	if (obj == OBTable || obj == OBSequence) {
 		schema = formatObjectIdentifier(sch);
 
 		fprintf(fout, " %s.%s TO %s;\n",

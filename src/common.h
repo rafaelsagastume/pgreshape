@@ -54,6 +54,22 @@ typedef struct PGIndex
 	char *comment;
 } PGIndex;
 
+typedef struct PGSequence
+{
+	int oid;
+	char *nspname;
+	char *relname;
+	char *comment;
+	char *relowner;
+	char *relacl;
+	char *start_value;
+	char *increment;
+	char *minvalue;
+	char *maxvalue;
+	char *cycle_option;
+	char *typname;
+} PGSequence;
+
 typedef struct PGAttribute
 {
 	int			attnum;
@@ -104,6 +120,8 @@ typedef struct PGTable
 	char *primary_keys_nn;
 	int ncheck;
 	PGCheckConstraint *checks;
+	int nsequence;
+	PGSequence *sequence;
 } PGTable;
 
 typedef struct PGROption {

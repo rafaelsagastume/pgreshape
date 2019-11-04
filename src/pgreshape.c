@@ -30,6 +30,7 @@
 #include "update.h"
 #include "trigger.h"
 #include "schema.h"
+#include "sequence.h"
 #include <libpq-fe.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -150,6 +151,10 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	 * process for reshape the table with its attributes and dependencies
 	 *
 	 */
+
+	fprintf(fout, "\n\n");
+	dumpCreateSequences(fout, t);
+
 	/*create new column*/
 	dumpNewColumn(fout, t, opts);
 
@@ -215,6 +220,9 @@ static void getTableObjects(PGconn *c, PGROption *opts) {
 
 	/*bring all the attributes of the table*/
 	getTableAttributes(c, t);
+
+	/*Search all sequences referenced to columns*/
+	getSequences(c, t, opts);
 
 	/*Search all indexes referenced to the table*/
 	getTableIndexes(c, t);
