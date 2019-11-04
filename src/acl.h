@@ -10,6 +10,7 @@
 #ifndef ACL_H
 #define ACL_H
 #define OBTable 0
+#define OBSequence 1
 
 #include "common.h"
 

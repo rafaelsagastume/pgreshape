@@ -20,6 +20,8 @@ add_executable(pgreshape
 	src/acl.h
 	src/schema.c
 	src/schema.h
+	src/sequence.c
+	src/sequence.h
 )
 
 # ignore Windows warnings
