@@ -124,6 +124,9 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	/*dump drop foreign keys*/
 	dumpDropForeignKey(fout, t);
 
+	/*dump drop exclude constraint*/
+	dumpDropExcludeConstraint(fout, t);
+
 	/*dump drop check constraint*/
 	dumpDropCheckConstraint(fout, t);
 
@@ -181,6 +184,10 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	fprintf(fout, "\n");
 	dumpCreateForeignKey(fout, t);
 
+	/*dump to generate the exclude constraint*/
+	fprintf(fout, "\n");
+	dumpCreateExcludeConstraint(fout, t);
+
 	/*dump to generate the check constraint again*/
 	fprintf(fout, "\n");
 	dumpCreateCheckConstraint(fout, t);
@@ -232,6 +239,9 @@ static void getTableObjects(PGconn *c, PGROption *opts) {
 
 	/*Search all foreign keys referenced to the table*/
 	getTableForeignKey(c, t);
+
+	/*Search all exclude constraint referenced to the table*/
+	getExcludeConstraint(c, t);
 
 	/*Search all check referenced to the table*/
 	getTableCheckConstraint(c, t);
