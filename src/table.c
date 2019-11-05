@@ -357,7 +357,13 @@ void dumpDropForeignKey(FILE *fout, PGTable *t) {
 
 
 void dumpCreateTempTableBackup(FILE *fout, PGTable *t) {
-	fprintf(fout, "CREATE TABLE %s.%s_reshape_bk AS SELECT * FROM %s.%s;\n", t->schema, t->table, t->schema, t->table);
+
+	if (t->primary_keys_nn == NULL || t->primary_keys_aa == NULL)
+	{
+		fprintf(fout, "CREATE TABLE %s.%s_reshape_bk AS SELECT ctid::text as ctid_one, * FROM %s.%s;\n", t->schema, t->table, t->schema, t->table);
+	} else {
+		fprintf(fout, "CREATE TABLE %s.%s_reshape_bk AS SELECT * FROM %s.%s;\n", t->schema, t->table, t->schema, t->table);
+	}
 }
 
 
