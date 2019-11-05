@@ -357,7 +357,7 @@ void dumpDropForeignKey(FILE *fout, PGTable *t) {
 
 
 void dumpCreateTempTableBackup(FILE *fout, PGTable *t) {
-	fprintf(fout, "CREATE TABLE %s.%s_reshape_bk AS SELECT * FROM %s.%s ORDER BY 1 DESC;\n", t->schema, t->table, t->schema, t->table);
+	fprintf(fout, "CREATE TABLE %s.%s_reshape_bk AS SELECT * FROM %s.%s;\n", t->schema, t->table, t->schema, t->table);
 }
 
 
