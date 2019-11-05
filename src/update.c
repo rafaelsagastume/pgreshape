@@ -22,8 +22,16 @@ void dumpUpdateData(FILE *fout, PGTable *t, PGROption *opts) {
 		}
 	}
 
-	fprintf(fout, "\nFROM (SELECT * FROM %s.%s_reshape_bk) a", t->schema, t->table);
-	fprintf(fout, "\nWHERE (%s) = (%s);", t->primary_keys_aa, t->primary_keys_nn);
+
+	if (t->primary_keys_nn == NULL || t->primary_keys_aa == NULL)
+	{
+		fprintf(fout, "\nFROM (SELECT ctid::text as ctid_one, * FROM %s.%s_reshape_bk) a", t->schema, t->table);
+		fprintf(fout, "\nWHERE (ctid::text) = (ctid_one);");
+	} else {
+		fprintf(fout, "\nFROM (SELECT * FROM %s.%s_reshape_bk) a", t->schema, t->table);
+		fprintf(fout, "\nWHERE (%s) = (%s);", t->primary_keys_aa, t->primary_keys_nn);
+	}
+
 
 	fprintf(fout, "\n\nDROP TABLE %s.%s_reshape_bk;\n", t->schema, t->table);
 }
