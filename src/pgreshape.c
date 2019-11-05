@@ -3,20 +3,6 @@
  * pgreshape -- Embed the new column according to the desired position in any table
  * in the postgresql database.
  *
- *  UNSUPPORTED
- * ~~~~~~~~~~~
- * columns (comment, default, type, security, check, unique, constraint)
- * views
- * functions
- * index
- * constraints (unique, check, not-null, primary, foreign keys, exclusion key)
- * procedure
- * triggers
- * materialized views
- * rules
- * comments
- * acl
- *
  * Copyright (c) 2019, Rafael Garcia Sagastume
  *
  *---------------------------------------------------------------------------------
