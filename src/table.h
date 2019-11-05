@@ -30,5 +30,8 @@ void getTableCheckConstraint(PGconn *c, PGTable *t);
 void dumpDropCheckConstraint(FILE *fout, PGTable *t);
 void dumpCreateCheckConstraint(FILE *fout, PGTable *t);
 int existsTable(PGconn *c, char *schema, char *table);
+void getExcludeConstraint(PGconn *c, PGTable *t);
+void dumpDropExcludeConstraint(FILE *fout, PGTable *t);
+void dumpCreateExcludeConstraint(FILE *fout, PGTable *t);
 
 #endif

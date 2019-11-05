@@ -659,3 +659,55 @@ int existsTable(PGconn *c, char *schema, char *table)
 	PQclear(res);
 	return n;
 }
+
+
+void getExcludeConstraint(PGconn *c, PGTable *t) {
+	PGresult	*res;
+	char *query = NULL;
+	int i;
+
+	asprintf(&query, 
+		"SELECT conname, pg_catalog.pg_get_constraintdef(r.oid, true) as condef FROM pg_catalog.pg_constraint r INNER JOIN pg_catalog.pg_class c ON (c.oid = r.conrelid) INNER JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE r.conrelid = %u AND r.contype = 'x' ORDER BY 1", t->oid);
+
+	res = PQexec(c, query);
+	
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		printf("query failed: %s\n", PQresultErrorMessage(res));
+		PQclear(res);
+		PQfinish(c);
+		exit(EXIT_FAILURE);
+	}
+
+	t->nexcludec = PQntuples(res);
+	if (t->nexcludec > 0)
+		t->excludec = (PGExcludeKey *) malloc(t->nexcludec * sizeof(PGExcludeKey));
+	else
+		t->excludec = NULL;
+
+	for (i = 0; i < t->nexcludec; i++)
+	{
+		t->excludec[i].conname = strdup(PQgetvalue(res, i, PQfnumber(res, "conname")));
+		t->excludec[i].condef = strdup(PQgetvalue(res, i, PQfnumber(res, "condef")));
+	}
+
+	PQclear(res);
+}
+
+void dumpDropExcludeConstraint(FILE *fout, PGTable *t) {
+	int i;
+	for (i = 0; i < t->nexcludec; i++)
+	{
+		fprintf(fout, "ALTER TABLE %s.%s DROP CONSTRAINT %s;\n", t->schema, t->table, t->excludec[i].conname);
+	}
+}
+
+void dumpCreateExcludeConstraint(FILE *fout, PGTable *t) {
+	int i;
+	for (i = 0; i < t->nexcludec; i++)
+	{
+		fprintf(fout, "ALTER TABLE ONLY %s.%s\n", t->schema, t->table);
+		fprintf(fout, "\tADD CONSTRAINT %s %s", t->excludec[i].conname, t->excludec[i].condef);
+		fprintf(fout, ";\n");
+	}
+}
