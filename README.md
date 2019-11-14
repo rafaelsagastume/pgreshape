@@ -102,20 +102,28 @@ It helps you to generate an sql script that looks for the dependencies of the ta
 
 ### requirements:
 ```
+Global
+$ git
 $ gcc
 $ cmake
 $ make
+
+Ubuntu 16.04 +
 $ postgresql
 $ postgresql-client
 $ postgresql-contrib
 $ postgresql-server-dev
 $ libpq-dev
+
+ArchLinux
+$ postgresql
+$ postgresql-libs
 ```
 
 ### compile:
 ```
 $ git clone https://github.com/rafaelsagastume/pgreshape.git
-$ cd pgquarrel
+$ cd pgreshape
 $ cmake .
 $ make
 ```
