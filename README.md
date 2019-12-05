@@ -133,6 +133,13 @@ $ make
 $ sudo make install
 ```
 
+### update:
+```
+$ git pull origin master
+$ make clean && make
+$ sudo make install
+```
+
 ### reshape.conf:
 ```
 host = localhost
@@ -140,8 +147,8 @@ port = 5432
 dbname = db1
 user = postgres
 password = 123
-file =
+file = /tmp/file.sql
 ```
 
 ### example:
-> `pgreshape -c /opt/reshape.conf -s rrhh -t expediente -offset emisor -column nueva -type 'boolean'`
+> `pgreshape -c /opt/reshape.conf -s rrhh -t expediente -offset emisor -column nueva -type 'boolean' -file /tmp/file-other.sql`
