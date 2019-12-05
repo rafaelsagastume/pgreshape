@@ -142,6 +142,11 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	 */
 
 	fprintf(fout, "\n\n");
+	
+	/*create table security labels*/
+	dumpTableSecurityLabels(fout, t);
+
+	/*create sequences*/
 	dumpCreateSequences(fout, t);
 
 	/*create new column*/
@@ -210,6 +215,9 @@ static void getTableObjects(PGconn *c, PGROption *opts) {
 		printf("without results!\n");
 		exit(EXIT_SUCCESS);
 	}
+
+	/*buscar etiquetas de seguridad para la tabla*/
+	getTableSecurityLabels(c, t);
 
 	/*bring all the attributes of the table*/
 	getTableAttributes(c, t);
