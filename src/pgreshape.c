@@ -72,8 +72,9 @@ static void help(void)
 	printf("                          -type boolean\n");
 	printf("                          or -type 'numeric (15, 2) default 10.20'\n");
 	printf("                          or -type \"text default 'hola'\"\n");
+	printf("  -file               argument for the sql file path, this will be priority if specified\n");
 	printf("  example:\n");
-	printf("  pgreshape -c /opt/reshape.conf -s rrhh -t expediente -offset emisor -column nueva -type 'boolean'\n");
+	printf("  pgreshape -c /opt/reshape.conf -s rrhh -t expediente -offset emisor -column nueva -type 'boolean' -file /tmp/file-other.sql\n");
 	printf("\n");
 	printf("\n");
 	printf("  file.sql            the name of the output file is file.sql in the execution path'\n");
@@ -84,7 +85,7 @@ static void help(void)
 	printf("              dbname = db1\n");
 	printf("              user = postgres\n");
 	printf("              password = 123\n");
-	printf("              file = \n");
+	printf("              file = /tmp/file.sql\n");
 	printf("\n");
 	printf("  --help              show this help, then exit\n");
 	printf("  --version           output version information, then exit\n");
@@ -93,7 +94,6 @@ static void help(void)
 
 static void pgreshape(FILE *fout, PGROption *opts) {
 	fprintf(fout, "--\n-- pgreshape %s\n", PGR_VERSION);
-	fprintf(fout, "-- by Rafael Garcia Sagastume Inc.\n");
 	fprintf(fout, "-- Copyright %s.\n", PGR_COPY);
 	fprintf(fout, "--");
 
@@ -296,6 +296,11 @@ int main(int argc, char const *argv[])
 
 				if (argv[2])
 					opts->type = strdup(argv[2]);
+
+			} else if (!strcmp(argv[1], "-file")) {
+
+				if (argv[2])
+					config->file = strdup(argv[2]);
 
 			}
 
