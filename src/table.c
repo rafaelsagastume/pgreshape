@@ -386,10 +386,14 @@ void dumpTableSecurityLabels(FILE *fout, PGTable *t) {
 	if (t->nseclabels > 0)
 	{
 		fprintf(fout, "\n");
+		fprintf(fout, "-- \n");
+		fprintf(fout, "-- the security labels in the table are not removed\n");
+		fprintf(fout, "-- therefore they are not created again\n");
+		fprintf(fout, "-- \n");
 		for (i = 0; i < t->nseclabels; i++)
 		{
 			fprintf(fout, "\n");
-			fprintf(fout, "SECURITY LABEL FOR %s ON %s.%s IS %s;",
+			fprintf(fout, "-- SECURITY LABEL FOR %s ON %s.%s IS %s;",
 				t->seclabels[i].provider,
 				t->schema,
 				t->table,
