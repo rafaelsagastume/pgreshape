@@ -28,6 +28,10 @@ PGTable * getTable(PGconn *c, PGROption *opts)
 		t->oid = strtoul(PQgetvalue(res, 0, PQfnumber(res, "oid")), NULL, 10);
 		t->schema = strdup(PQgetvalue(res, 0, PQfnumber(res, "nspname")));
 		t->table = strdup(PQgetvalue(res, 0, PQfnumber(res, "relname")));
+
+		/* this process is done in another section */
+		t->nseclabels = 0;
+		t->seclabels = NULL;
 	} else
 		t = NULL;
 
@@ -35,6 +39,53 @@ PGTable * getTable(PGconn *c, PGROption *opts)
 
 	PQclear(res);
 	return t;
+}
+
+
+void getTableSecurityLabels(PGconn *c, PGTable *t) {
+	PGresult	*res;
+	char *query = NULL;
+	int i;
+
+	if (PQserverVersion(c) < 90100)
+	{
+		printf("ignoring security labels because server does not support it");
+		return;
+	}
+
+	asprintf(&query, 
+		"SELECT provider, label FROM pg_seclabel s INNER JOIN pg_class c ON (s.classoid = c.oid) WHERE c.relname = 'pg_class' AND s.objoid = %u ORDER BY provider", t->oid);
+
+	res = PQexec(c, query);
+	
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+		printf("query failed: %s\n", PQresultErrorMessage(res));
+		PQclear(res);
+		PQfinish(c);
+		exit(EXIT_FAILURE);
+	}
+
+	t->nseclabels = PQntuples(res);
+	if (t->nseclabels > 0)
+		t->seclabels = (PGSecLabel *) malloc(t->nseclabels * sizeof(PGSecLabel));
+	else
+		t->seclabels = NULL;
+
+	for (i = 0; i < t->nseclabels; i++)
+	{
+		char *withoutescape;
+		t->seclabels[i].provider = strdup(PQgetvalue(res, i, PQfnumber(res, "provider")));
+		withoutescape = PQgetvalue(res, i, PQfnumber(res, "label"));
+		t->seclabels[i].label = PQescapeLiteral(c, withoutescape, strlen(withoutescape));
+		if (t->seclabels[i].label == NULL)
+		{
+			printf("escaping label failed: %s", PQerrorMessage(c));
+			PQclear(res);
+			PQfinish(c);
+			exit(EXIT_FAILURE);
+		}
+	}
 }
 
 
@@ -326,6 +377,29 @@ void getTableForeignKey(PGconn *c, PGTable *t) {
 	}
 
 	PQclear(res);
+}
+
+
+void dumpTableSecurityLabels(FILE *fout, PGTable *t) {
+	int i;
+
+	if (t->nseclabels > 0)
+	{
+		fprintf(fout, "\n");
+		fprintf(fout, "-- \n");
+		fprintf(fout, "-- the security labels in the table are not removed\n");
+		fprintf(fout, "-- therefore they are not created again\n");
+		fprintf(fout, "-- \n");
+		for (i = 0; i < t->nseclabels; i++)
+		{
+			fprintf(fout, "\n");
+			fprintf(fout, "-- SECURITY LABEL FOR %s ON %s.%s IS %s;",
+				t->seclabels[i].provider,
+				t->schema,
+				t->table,
+				t->seclabels[i].label);
+		}
+	}
 }
 
 

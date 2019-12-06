@@ -21,6 +21,12 @@
 #include <libpq-fe.h>
 #include <c.h>
 
+typedef struct PGSecLabel
+{
+	char	*provider;
+	char	*label;
+} PGSecLabel;
+
 typedef struct PGForeignKey
 {
 	char *conname;
@@ -90,6 +96,10 @@ typedef struct PGAttribute
 	char		*attoptions;
 	char		*comment;
 	char		*acl;
+
+	/* security labels */
+	int nseclabels;
+	PGSecLabel *seclabels;
 } PGAttribute;
 
 typedef struct PGView
@@ -130,6 +140,10 @@ typedef struct PGTable
 	PGSequence *sequence;
 	int nexcludec;
 	PGExcludeKey *excludec;
+
+	/* security labels */
+	int nseclabels;
+	PGSecLabel *seclabels;
 } PGTable;
 
 typedef struct PGROption {
