@@ -75,6 +75,66 @@ void getSequences(PGconn *c, PGTable *t, PGROption *opts)
 }
 
 
+
+
+void getSequenceSecurityLabels(PGconn *c, PGTable *t) {
+	PGresult *res;
+	char *query = NULL;
+	int i;
+
+	if (PQserverVersion(c) < 90100)
+	{
+		printf("ignoring security labels because server does not support it");
+		return;
+	}
+
+	for (i = 0; i < t->nsequence; i++)
+	{
+
+		int j; 
+
+		asprintf(&query, 
+			"SELECT provider, label FROM pg_seclabel s INNER JOIN pg_class c ON (s.classoid = c.oid) WHERE c.relname = 'pg_class' AND s.objoid = %u ORDER BY provider", t->sequence[i].oid);
+		
+		res = PQexec(c, query);
+		
+		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		{
+			printf("query failed: %s\n", PQresultErrorMessage(res));
+			PQclear(res);
+			PQfinish(c);
+			exit(EXIT_FAILURE);
+		}
+
+		t->sequence[i].nseclabels = PQntuples(res);
+		if (t->sequence[i].nseclabels > 0)
+			t->sequence[i].seclabels = (PGSecLabel *) malloc(t->sequence[i].nseclabels * sizeof(PGSecLabel));
+		else
+			t->sequence[i].seclabels = NULL;
+
+		for (j = 0; j < t->sequence[i].nseclabels; j++)
+		{
+			char *withoutescape;
+			t->sequence[i].seclabels[j].provider = strdup(PQgetvalue(res, j, PQfnumber(res, "provider")));
+			withoutescape = PQgetvalue(res, j, PQfnumber(res, "label"));
+			t->sequence[i].seclabels[j].label = PQescapeLiteral(c, withoutescape, strlen(withoutescape));
+			if (t->sequence[i].seclabels[j].label == NULL)
+			{
+				printf("[sequence] escaping label failed: %s", PQerrorMessage(c));
+				PQclear(res);
+				PQfinish(c);
+				exit(EXIT_FAILURE);
+			}
+		}
+
+		PQclear(res);
+
+	}
+}
+
+
+
+
 void dumpCreateSequences(FILE *fout, PGTable *t) {
 	int i;
 	for (i = 0; i < t->nsequence; i++)
@@ -117,6 +177,25 @@ void dumpCreateSequences(FILE *fout, PGTable *t) {
 			fprintf(fout, "\n");
 			fprintf(fout, "COMMENT ON SEQUENCE %s.%s IS %s;\n",
 					t->sequence[i].nspname, t->sequence[i].relname, t->sequence[i].comment);
+		}
+
+		if (t->sequence[i].nseclabels > 0)
+		{
+
+			int j;
+			fprintf(fout, "\n\n");
+			fprintf(fout, "-- \n");
+			fprintf(fout, "-- the security labels on sequence [%s.%s]\n", t->sequence[i].nspname, t->sequence[i].relname);
+			fprintf(fout, "-- \n");
+			for (j = 0; j < t->sequence[i].nseclabels; ++j)
+			{
+				fprintf(fout, "SECURITY LABEL FOR %s ON SEQUENCE %s.%s IS %s;\n",
+						t->sequence[i].seclabels[j].provider,
+						t->sequence[i].nspname,
+						t->sequence[i].relname,
+						t->sequence[i].seclabels[j].label);
+			}
+			
 		}
 
 		fprintf(fout, "\n\n");

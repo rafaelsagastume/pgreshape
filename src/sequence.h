@@ -7,5 +7,6 @@
 
 void getSequences(PGconn *c, PGTable *t, PGROption *opts);
 void dumpCreateSequences(FILE *fout, PGTable *t);
+void getSequenceSecurityLabels(PGconn *c, PGTable *t);
 
 #endif
