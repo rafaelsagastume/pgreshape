@@ -361,6 +361,12 @@ int main(int argc, char const *argv[])
 			/*extract the necessary objects for the first phase of the procedure*/
 			getTableObjects(conn, opts);
 
+			/*offset cannot be the last column*/
+			if (getAttnumOffset(t, opts) == t->nattributes)
+			{
+				printf("offset cannot be the last column : \"%s\"\n", opts->offset);
+				exit(EXIT_FAILURE);
+			}
 
 			/*offset must be different from primary keys*/
 			if (getAttnumOffset(t, opts) <= 0)
@@ -384,7 +390,7 @@ int main(int argc, char const *argv[])
 
 		pg_close(conn);
 	} else {
-		printf("nothing to do.\n");
+		printf("configuration file not loaded, nothing to do.\n");
 	}
 
 	freeConfig(config);
