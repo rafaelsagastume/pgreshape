@@ -35,5 +35,7 @@ void dumpDropExcludeConstraint(FILE *fout, PGTable *t);
 void dumpCreateExcludeConstraint(FILE *fout, PGTable *t);
 void getTableSecurityLabels(PGconn *c, PGTable *t);
 void dumpTableSecurityLabels(FILE *fout, PGTable *t);
+void getColumnSecurityLabels(PGconn *c, PGTable *t, PGROption *opts);
+void dumpColumnSecurityLabels(FILE *fout, PGTable *t);
 
 #endif

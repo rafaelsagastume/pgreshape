@@ -221,6 +221,70 @@ void getTableAttributes(PGconn *c, PGTable *t) {
 }
 
 
+
+void getColumnSecurityLabels(PGconn *c, PGTable *t, PGROption *opts) {
+	PGresult	*res;
+	char *query = NULL;
+	int i;
+	int offset_column;
+
+	if (PQserverVersion(c) < 90100)
+	{
+		printf("ignoring security labels because server does not support it");
+		return;
+	}
+
+
+	offset_column = getAttnumOffset(t, opts);
+
+	/* attributes */
+	for (i = 0; i < t->nattributes; i++)
+	{
+		if (t->attributes[i].attnum > offset_column) {
+			int j;
+			asprintf(&query, 
+				"SELECT provider, label FROM pg_seclabel s INNER JOIN pg_class c ON (s.classoid = c.oid) WHERE c.relname = 'pg_attribute' AND s.objoid = %u AND s.objsubid = %u ORDER BY provider",
+				t->oid, t->attributes[i].attnum);
+			
+			res = PQexec(c, query);
+			
+			if (PQresultStatus(res) != PGRES_TUPLES_OK)
+			{
+				printf("query failed: %s\n", PQresultErrorMessage(res));
+				PQclear(res);
+				PQfinish(c);
+				exit(EXIT_FAILURE);
+			}
+
+			/*prepare seclabels for column*/
+			t->attributes[i].nseclabels = PQntuples(res);
+			if (t->attributes[i].nseclabels > 0)
+				t->attributes[i].seclabels = (PGSecLabel *) malloc(t->attributes[i].nseclabels * sizeof(PGSecLabel));
+			else
+				t->attributes[i].seclabels = NULL;
+
+			for (j = 0; j < t->attributes[i].nseclabels; j++)
+			{
+				char *withoutescape;
+				t->attributes[i].seclabels[j].provider = strdup(PQgetvalue(res, j, PQfnumber(res, "provider")));
+				withoutescape = PQgetvalue(res, j, PQfnumber(res, "label"));
+				t->attributes[i].seclabels[j].label = PQescapeLiteral(c, withoutescape, strlen(withoutescape));
+				if (t->attributes[i].seclabels[j].label == NULL)
+				{
+					printf("escaping label failed: %s", PQerrorMessage(c));
+					PQclear(res);
+					PQfinish(c);
+					exit(EXIT_FAILURE);
+				}
+			}
+
+			PQclear(res);
+		}
+	}
+}
+
+
+
 void getTableIndexes(PGconn *c, PGTable *t) {
 	PGresult	*res;
 	char *query = NULL;
@@ -398,6 +462,34 @@ void dumpTableSecurityLabels(FILE *fout, PGTable *t) {
 				t->schema,
 				t->table,
 				t->seclabels[i].label);
+		}
+	}
+}
+
+
+
+void dumpColumnSecurityLabels(FILE *fout, PGTable *t) {
+	int i;
+	for (i = 0; i < t->nattributes; i++)
+	{
+		if (t->attributes[i].nseclabels > 0)
+		{	
+			int j;
+			fprintf(fout, "\n\n");
+			fprintf(fout, "-- \n");
+			fprintf(fout, "-- the security labels on column\n");
+			fprintf(fout, "-- \n");
+			for (j = 0; j < t->attributes[i].nseclabels; j++)
+			{
+				fprintf(fout, "SECURITY LABEL FOR %s ON COLUMN %s.%s.%d IS %s;\n",
+					t->attributes[i].seclabels[j].provider,
+					t->schema,
+					t->table,
+					t->attributes[i].attnum,
+					t->attributes[i].seclabels[j].label);
+			}
+
+			fprintf(fout, "\n");
 		}
 	}
 }

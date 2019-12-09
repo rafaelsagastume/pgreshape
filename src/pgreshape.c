@@ -171,6 +171,9 @@ static void pgreshape(FILE *fout, PGROption *opts) {
 	/*dump to generate comment on columns*/
 	dumpSetCommentColumnTable(fout, t, opts);
 
+	/*create column security labels*/
+	dumpColumnSecurityLabels(fout, t);
+
 	/*dump to generate the foreign keys again*/
 	fprintf(fout, "\n");
 	dumpCreateForeignKey(fout, t);
@@ -221,6 +224,9 @@ static void getTableObjects(PGconn *c, PGROption *opts) {
 
 	/*bring all the attributes of the table*/
 	getTableAttributes(c, t);
+
+	/*buscar etiquetas de seguridad para las columnas*/
+	getColumnSecurityLabels(c, t, opts);
 
 	/*Search all sequences referenced to columns*/
 	getSequences(c, t, opts);
