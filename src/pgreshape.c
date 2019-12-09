@@ -249,6 +249,9 @@ static void getTableObjects(PGconn *c, PGROption *opts) {
 	/*Search all views referenced to the table*/
 	getDependentViews(c, t);
 
+	/*get security labels for views*/
+	getViewSecurityLabels(c, t);
+
 	printf("OID:[%d] Tabla:[%s]\n", t->oid, t->table);
 }
 

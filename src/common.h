@@ -114,6 +114,9 @@ typedef struct PGView
 	char *acl;
 	char *reloptions;
 	char *checkoption;
+	/* security labels */
+	int nseclabels;
+	PGSecLabel *seclabels;
 } PGView;
 
 typedef struct PGTable

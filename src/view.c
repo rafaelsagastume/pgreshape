@@ -50,6 +50,63 @@ void getDependentViews(PGconn *c, PGTable *t)
 }
 
 
+
+void getViewSecurityLabels(PGconn *c, PGTable *t) {
+	PGresult	*res;
+	char *query = NULL;
+	int i;
+
+	if (PQserverVersion(c) < 90100)
+	{
+		printf("ignoring security labels because server does not support it");
+		return;
+	}
+
+	for (i = 0; i < t->nviews; i++)
+	{
+
+		int j; 
+
+		asprintf(&query, 
+			"SELECT provider, label FROM pg_seclabel s INNER JOIN pg_class c ON (s.classoid = c.oid) WHERE c.relname = 'pg_class' AND s.objoid = %u ORDER BY provider", t->views[i].oid);
+
+		res = PQexec(c, query);
+		
+		if (PQresultStatus(res) != PGRES_TUPLES_OK)
+		{
+			printf("query failed: %s\n", PQresultErrorMessage(res));
+			PQclear(res);
+			PQfinish(c);
+			exit(EXIT_FAILURE);
+		}
+
+		t->views[i].nseclabels = PQntuples(res);
+		if (t->views[i].nseclabels > 0)
+			t->views[i].seclabels = (PGSecLabel *) malloc(t->views[i].nseclabels * sizeof(PGSecLabel));
+		else
+			t->views[i].seclabels = NULL;
+
+		for (j = 0; j < t->views[i].nseclabels; j++)
+		{
+			char *withoutescape;
+			t->views[i].seclabels[j].provider = strdup(PQgetvalue(res, j, PQfnumber(res, "provider")));
+			withoutescape = PQgetvalue(res, j, PQfnumber(res, "label"));
+			t->views[i].seclabels[j].label = PQescapeLiteral(c, withoutescape, strlen(withoutescape));
+			if (t->views[i].seclabels[j].label == NULL)
+			{
+				printf("[view] escaping label failed: %s", PQerrorMessage(c));
+				PQclear(res);
+				PQfinish(c);
+				exit(EXIT_FAILURE);
+			}
+		}
+
+		PQclear(res);
+	}
+}
+
+
+
 void dumpDropDependentView(FILE *fout, PGTable *t) {
 	int i;
 	for (i = t->nviews-1; i > -1; i--)
@@ -65,7 +122,7 @@ void dumpCreateCreateView(FILE *fout, PGTable *t) {
 	for (i = 0; i < t->nviews; i++)
 	{
 		/*generate view*/
-		fprintf(fout, "\n");
+		fprintf(fout, "\n\n");
 		fprintf(fout, "CREATE ");
 
 		if (t->views[i].relkind == 'v')
@@ -108,6 +165,26 @@ void dumpCreateCreateView(FILE *fout, PGTable *t) {
 		}
 
 		fprintf(fout, "%s.%s IS '%s';\n", t->views[i].schema, t->views[i].view, t->views[i].comment);
+
+
+		if (t->views[i].nseclabels > 0)
+		{
+
+			int j;
+			fprintf(fout, "\n\n");
+			fprintf(fout, "-- \n");
+			fprintf(fout, "-- the security labels on view [%s.%s]\n", t->views[i].schema, t->views[i].view);
+			fprintf(fout, "-- \n");
+			for (j = 0; j < t->views[i].nseclabels; ++j)
+			{
+				fprintf(fout, "SECURITY LABEL FOR %s ON VIEW %s.%s IS %s;\n",
+						t->views[i].seclabels[j].provider,
+						t->views[i].schema,
+						t->views[i].view,
+						t->views[i].seclabels[j].label);
+			}
+			
+		}
 
 	}
 
