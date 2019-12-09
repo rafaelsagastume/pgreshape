@@ -219,7 +219,7 @@ static void getTableObjects(PGconn *c, PGROption *opts) {
 		exit(EXIT_SUCCESS);
 	}
 
-	/*buscar etiquetas de seguridad para la tabla*/
+	/*security labels for table*/
 	getTableSecurityLabels(c, t);
 
 	/*bring all the attributes of the table*/
@@ -230,6 +230,9 @@ static void getTableObjects(PGconn *c, PGROption *opts) {
 
 	/*Search all sequences referenced to columns*/
 	getSequences(c, t, opts);
+
+	/*security labels for sequences*/
+	getSequenceSecurityLabels(c, t);
 
 	/*Search all indexes referenced to the table*/
 	getTableIndexes(c, t);

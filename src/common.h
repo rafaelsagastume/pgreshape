@@ -80,6 +80,9 @@ typedef struct PGSequence
 	char *maxvalue;
 	char *cycle_option;
 	char *typname;
+	/* security labels */
+	int nseclabels;
+	PGSecLabel *seclabels;
 } PGSequence;
 
 typedef struct PGAttribute
